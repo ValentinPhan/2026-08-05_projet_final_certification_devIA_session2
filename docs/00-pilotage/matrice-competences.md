@@ -23,8 +23,8 @@ Statuts : ⏳ à faire · 🚧 en cours · ✅ fait et documenté
 | C8 | Paramétrer un service IA (POC Ollama local) | S5 | `ai-service/poc/`, `docs/03-bloc2-ia/poc.md` | ✅ |
 | C9 | Développer une API REST exposant un modèle/service IA | S6 | `ai-service/api_ia/`, `docs/03-bloc2-ia/api-ia.md` | ✅ |
 | C10 | Intégrer l'API IA dans une application prototype | S6 | `app/frontend/prototype.py`, `docs/03-bloc2-ia/prototype.md` | ✅ |
-| C11 | Monitorer un modèle IA | S7 | `ai-service/monitoring/`, `docs/03-bloc2-ia/monitoring-modele.md` | ⏳ |
-| C12 | Programmer les tests automatisés du modèle IA | S7 | `ai-service/tests/`, `docs/03-bloc2-ia/tests-modele.md` | ⏳ |
+| C11 | Monitorer un modèle IA | S7 | `ai-service/monitoring/`, `docs/03-bloc2-ia/monitoring-modele.md` | ✅ |
+| C12 | Programmer les tests automatisés du modèle IA | S7 | `ai-service/api_ia/tests/test_modele_qualite.py`, `docs/03-bloc2-ia/tests-modele.md` | ✅ |
 | C13 | Créer une chaîne CI/CD MLOps | S8 | `.github/workflows/mlops-ci-cd.yml`, `docs/03-bloc2-ia/cicd-mlops.md` | ⏳ |
 
 ## Bloc 3 — E4 (S1, S9-S10) + E5 (S11)

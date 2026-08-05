@@ -7,6 +7,6 @@
 - ✅ [`poc.md`](poc.md) — installation/configuration d'Ollama en local, test de faisabilité et limites documentées (C8)
 - ✅ [`api-ia.md`](api-ia.md) — documentation de l'API REST exposant l'analyse de compatibilité (C9)
 - ✅ [`prototype.md`](prototype.md) — documentation de l'application prototype (C10)
-- `monitoring-modele.md` — métriques suivies (précision détection allergènes, latence), outils, procédure (C11)
-- `tests-modele.md` — périmètre et exécution des tests automatisés du modèle (C12)
+- ✅ [`monitoring-modele.md`](monitoring-modele.md) — métriques suivies (précision détection allergènes, latence), outils, procédure (C11)
+- ✅ [`tests-modele.md`](tests-modele.md) — périmètre et exécution des tests automatisés du modèle (C12)
 - `cicd-mlops.md` — documentation de la chaîne de livraison continue MLOps (C13)

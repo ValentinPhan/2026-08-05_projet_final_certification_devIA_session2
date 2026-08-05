@@ -25,45 +25,84 @@ ALLERGENES_REFERENTIEL = [
     "Mollusques",
 ]
 
-# Synonymes/formes ingredients par allergene. Ajoutes suite au POC (S5) qui a
-# montre que le modele ne reliait pas toujours un synonyme ("tahini") a la
-# categorie officielle - voir docs/03-bloc2-ia/poc.md. Servent ici a la fois
-# de contexte pour le prompt IA et de dictionnaire pour la recherche par
-# mots-cles deterministe (voir ai-service/api_ia/extraction.py).
+# Synonymes/formes ingredients par allergene. Constitue et corrige de facon
+# iterative a partir de cas reels plutot que par anticipation - voir
+# docs/03-bloc2-ia/tests-modele.md pour l'historique complet :
 #
-# Couverture multilingue partielle (FR/EN + termes allemands les plus
-# courants) : ajoutee suite a un test du prototype (S6) sur un produit
-# allemand ("3x Steinofen-Pizza Salami") dont l'ingredient "Milch" (lait)
-# n'etait detecte ni par le modele ni par la recherche par mots-cles
-# FR/EN, provoquant un faux "compatible" pour un profil allergique au
-# lait - voir docs/03-bloc2-ia/prototype.md. Open Food Facts etant une
-# base mondiale, la couverture au-dela du FR/EN/DE reste une limite
-# connue (espagnol, italien, etc. non couverts a ce stade).
+# - Ajout initial (POC S5) : le modele ne reliait pas toujours un synonyme
+#   ("tahini") a la categorie officielle ("Graines de sesame").
+# - Ajout allemand (prototype S6) : un produit dont les ingredients sont en
+#   allemand ("Milch") passait a tort pour "compatible".
+# - Ajout anglais + retraits de precision (monitoring S7, via le jeu de
+#   donnees de reference `golden_dataset.py`) : plusieurs mots anglais
+#   basiques manquaient ("wheat", "milk", "egg", "fish", "soy", "sulphite"
+#   orthographe britannique), et plusieurs synonymes trop generiques
+#   provoquaient de faux positifs : "farine" seul (present dans "farine
+#   d'amande", sans gluten), "beurre"/"butter" seul (present dans "beurre de
+#   cacao", sans lait), "noix" seul (present dans "noix de muscade" et "noix
+#   de coco", sans lien avec les fruits a coque allergenes). Ces trois
+#   synonymes ambigus ont ete retires plutot que corriges par une regle
+#   ad hoc : limite de precision assumee et documentee (voir
+#   docs/03-bloc2-ia/tests-modele.md) plutot que rustine fragile.
+#
+# Couverture linguistique assumee comme incomplete au-dela du FR/EN/DE
+# (espagnol, italien, etc. non couverts a ce stade).
 SYNONYMES_ALLERGENES: dict[str, list[str]] = {
     "Gluten (cereales)": [
-        "ble", "froment", "orge", "seigle", "avoine", "epeautre", "farine", "amidon de ble", "gluten",
+        "ble", "froment", "orge", "seigle", "avoine", "epeautre", "amidon de ble", "gluten", "farine de ble",
+        "wheat", "barley", "rye", "oat", "malt",  # anglais
         "weizen", "weizenmehl", "weizenstarke", "roggen", "gerste", "hafer",  # allemand
     ],
-    "Crustaces": ["crevette", "crabe", "homard", "langoustine", "langouste", "crustace"],
-    # "ei" (allemand, oeuf) volontairement exclu : trop court, matche par erreur
-    # dans des mots sans rapport ("Speisesalz", "Reifekulturen") avec une simple
-    # recherche de sous-chaine - constate lors du test du prototype (S6).
-    "Oeufs": ["oeuf", "ovoproduit", "albumine", "lysozyme", "eier", "eiklar", "eigelb", "vollei"],
-    "Poissons": ["poisson", "anchois", "thon", "saumon", "gelatine de poisson", "fisch"],
-    "Arachides": ["arachide", "cacahuete", "huile d'arachide", "erdnuss"],
-    "Soja": ["soja", "lecithine de soja", "sauce soja", "tofu", "edamame", "sojabohne"],
+    "Crustaces": [
+        "crevette", "crabe", "homard", "langoustine", "langouste", "crustace",
+        "shrimp", "prawn", "crab", "lobster", "crayfish",  # anglais
+    ],
+    "Oeufs": [
+        "oeuf", "ovoproduit", "albumine", "lysozyme",
+        "egg", "albumin",  # anglais
+        "eier", "eiklar", "eigelb", "vollei",  # allemand ("ei" seul exclu, voir note ci-dessous)
+    ],
+    "Poissons": [
+        "poisson", "anchois", "thon", "saumon", "gelatine de poisson",
+        "fish", "anchovy", "tuna", "salmon", "cod",  # anglais
+        "fisch",  # allemand
+    ],
+    "Arachides": [
+        "arachide", "cacahuete", "huile d'arachide",
+        "peanut", "groundnut",  # anglais
+        "erdnuss",  # allemand
+    ],
+    "Soja": [
+        "soja", "lecithine de soja", "sauce soja", "tofu", "edamame",
+        "soy", "soya", "soybean", "soy lecithin",  # anglais
+        "sojabohne",  # allemand
+    ],
     "Lait": [
-        "lait", "lactose", "caseine", "proteines de lait", "petit-lait", "whey", "beurre", "creme", "fromage",
-        "milch", "milchpulver", "molke", "kase", "sahne", "butter", "edamer", "joghurt",  # allemand
+        "lait", "lactose", "caseine", "proteines de lait", "petit-lait", "creme", "fromage",
+        "milk", "whey", "cream", "cheese", "butter",  # anglais
+        "milch", "milchpulver", "molke", "kase", "sahne", "edamer", "joghurt",  # allemand
     ],
     "Fruits a coque": [
         "amande", "noisette", "noix de cajou", "pistache", "noix de pecan",
-        "noix du bresil", "noix de macadamia", "noix", "nuss", "haselnuss", "mandel",
+        "noix du bresil", "noix de macadamia", "cerneau de noix", "noix de grenoble",
+        "almond", "hazelnut", "walnut", "cashew", "pistachio", "pecan", "brazil nut", "macadamia",  # anglais
+        "mandel", "haselnuss",  # allemand
     ],
-    "Celeri": ["celeri", "sellerie"],
-    "Moutarde": ["moutarde", "senf"],
-    "Graines de sesame": ["sesame", "tahini", "pate de sesame", "puree de sesame", "huile de sesame", "sesam"],
-    "Anhydride sulfureux et sulfites": ["sulfite", "anhydride sulfureux", "metabisulfite", "so2", "sulfit"],
-    "Lupin": ["lupin", "lupine"],
-    "Mollusques": ["moule", "huitre", "escargot", "calmar", "poulpe", "coquille saint-jacques", "mollusque"],
+    "Celeri": ["celeri", "sellerie", "celery"],
+    "Moutarde": ["moutarde", "senf", "mustard"],
+    "Graines de sesame": [
+        "sesame", "tahini", "pate de sesame", "puree de sesame", "huile de sesame",
+        "sesame seed", "sesame oil",  # anglais (memes racines que le francais)
+        "sesam",  # allemand
+    ],
+    "Anhydride sulfureux et sulfites": [
+        "sulfite", "anhydride sulfureux", "metabisulfite", "so2",
+        "sulphite", "sulphur dioxide", "sulfur dioxide", "metabisulphite",  # anglais (orthographe britannique et americaine)
+        "sulfit",  # allemand
+    ],
+    "Lupin": ["lupin", "lupine", "lupini"],
+    "Mollusques": [
+        "moule", "huitre", "escargot", "calmar", "poulpe", "coquille saint-jacques", "mollusque",
+        "mussel", "oyster", "squid", "octopus", "snail", "scallop", "clam",  # anglais
+    ],
 }

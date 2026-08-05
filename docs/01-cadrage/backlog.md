@@ -62,7 +62,15 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] 9 tests d'intégration bout-en-bout (`app/tests/test_integration.py`)
 - [x] 2 bugs réels trouvés et corrigés en testant (timeout, angle mort multilingue) — voir `docs/03-bloc2-ia/prototype.md`
 
-*(Sprints S7 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
+### Sprint S7 — Monitoring modèle + tests (28/04→02/05) — ✅ Fait
+- [x] Golden dataset de reference (`ai-service/common/golden_dataset.py`, 11 cas reels)
+- [x] 4 bugs reels corriges grace au golden dataset (anglais manquant, "farine"/"beurre"/"noix" trop generiques, ligature "œ" non normalisee)
+- [x] Tests automatises du modele a 3 niveaux (`ai-service/api_ia/tests/test_modele_qualite.py`)
+- [x] Monitoring MLflow (`ai-service/monitoring/evaluer_modele.py`), tableau de bord verifie dans un navigateur
+- [x] Decouverte via le monitoring : biais de sur-detection du gluten du modele local, documente avec recommandations
+- [x] `docs/03-bloc2-ia/monitoring-modele.md` et `tests-modele.md`
+
+*(Sprints S8 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
 
 ## Rituels agiles (C16)
 

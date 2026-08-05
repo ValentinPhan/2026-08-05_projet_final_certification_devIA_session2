@@ -39,6 +39,16 @@ allergene n'est detecte, renvoie une liste vide."""
 
 
 def _normalize(text: str) -> str:
+    """Minuscule, sans accents, et sans ligatures (oe/ae) pour une recherche de mots-cles fiable.
+
+    NFKD decompose les caracteres accentues (e -> e + accent, filtre ensuite)
+    mais NE decompose PAS les ligatures typographiques comme "oe" (U+0153) en
+    "o"+"e" : sans ce remplacement explicite, "boeuf"/"oeuf" ecrits avec la
+    ligature (tres frequent en francais correct) ne matchent jamais leur
+    synonyme "oeuf" - bug reel trouve via le jeu de donnees de reference
+    (golden_dataset), voir docs/03-bloc2-ia/tests-modele.md.
+    """
+    text = text.replace("œ", "oe").replace("Œ", "OE").replace("æ", "ae").replace("Æ", "AE")
     return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).lower()
 
 
