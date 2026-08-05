@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Data (raw/collected data is not versioned, only the scripts that produce it)
+data-pipeline/data/raw/
+data-pipeline/data/processed/
+*.sqlite3
+*.db
+
+# ML artifacts
+mlruns/
+mlartifacts/
+*.onnx
+*.pkl
+
+# Node (si frontend JS ajouté plus tard)
+node_modules/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
