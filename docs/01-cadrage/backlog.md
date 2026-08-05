@@ -42,7 +42,12 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] Registre des traitements RGPD (avec focus donnée de santé)
 - [x] API REST Data (FastAPI) + doc Swagger
 
-*(Sprints S4 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
+### Sprint S4 — Veille + benchmark IA (07→11/04) — ✅ Fait
+- [x] Script d'agrégation de veille (`ai-service/veille/aggregate_veille.py`, 4 flux RSS/Atom sans compte)
+- [x] Synthèse de veille technique et réglementaire (`docs/03-bloc2-ia/veille.md`)
+- [x] Benchmark des services IA (`docs/03-bloc2-ia/benchmark-services-ia.md`) — Ollama retenu
+
+*(Sprints S5 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
 
 ## Rituels agiles (C16)
 

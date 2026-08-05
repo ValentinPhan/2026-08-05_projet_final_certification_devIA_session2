@@ -18,8 +18,8 @@ Statuts : ⏳ à faire · 🚧 en cours · ✅ fait et documenté
 
 | Code | Compétence (résumé) | Semaine | Livrable prévu | Statut |
 |---|---|---|---|---|
-| C6 | Organiser et réaliser une veille technique et réglementaire | S4 | `docs/03-bloc2-ia/veille.md` | ⏳ |
-| C7 | Identifier des services IA préexistants (benchmark) | S4 | `docs/03-bloc2-ia/benchmark-services-ia.md` | ⏳ |
+| C6 | Organiser et réaliser une veille technique et réglementaire | S4 | `ai-service/veille/`, `docs/03-bloc2-ia/veille.md` | ✅ |
+| C7 | Identifier des services IA préexistants (benchmark) | S4 | `docs/03-bloc2-ia/benchmark-services-ia.md` | ✅ |
 | C8 | Paramétrer un service IA (POC Ollama local) | S5 | `ai-service/poc/`, `docs/03-bloc2-ia/poc.md` | ⏳ |
 | C9 | Développer une API REST exposant un modèle/service IA | S6 | `ai-service/api_ia/`, `docs/03-bloc2-ia/api-ia.md` | ⏳ |
 | C10 | Intégrer l'API IA dans une application prototype | S6 | `app/frontend/prototype.py`, `docs/03-bloc2-ia/prototype.md` | ⏳ |

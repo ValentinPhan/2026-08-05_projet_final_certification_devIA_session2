@@ -16,6 +16,7 @@ venv/
 # Data (raw/collected data is not versioned, only the scripts that produce it)
 data-pipeline/data/raw/
 data-pipeline/data/processed/
+ai-service/data/
 *.sqlite3
 *.db
 
