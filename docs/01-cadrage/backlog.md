@@ -27,12 +27,13 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] Architecture technique (`architecture.md`)
 - [x] Mise en place du backlog agile (ce fichier)
 
-### Sprint S2 — Collecte de données (24→28/03)
-- [ ] Script d'appel à l'API Open Food Facts
-- [ ] Script de scraping d'une source de recettes
-- [ ] Chargement du fichier Ciqual (ANSES)
-- [ ] Requête DuckDB sur l'export complet Open Food Facts
-- [ ] Script d'agrégation / nettoyage multi-sources
+### Sprint S2 — Collecte de données (24→28/03) — ✅ Fait
+- [x] Script d'appel à l'API Open Food Facts (`extract/openfoodfacts_api.py`)
+- [x] Script de scraping d'une source de recettes (`extract/scrape_recettes.py`)
+- [x] Chargement du fichier Ciqual (ANSES) (`extract/ciqual_loader.py`)
+- [x] Requête DuckDB sur l'export complet Open Food Facts (`extract/duckdb_openfoodfacts.py`)
+- [x] Script d'agrégation / nettoyage multi-sources (`transform/clean_aggregate.py`)
+- [x] Documentation C1/C2/C3 (`docs/02-bloc1-data/`)
 
 ### Sprint S3 — BDD + API Data (31/03→04/04)
 - [ ] Schéma PostgreSQL (MLD), y compris chiffrement de la table des allergies

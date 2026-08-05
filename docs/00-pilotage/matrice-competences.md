@@ -8,9 +8,9 @@ Statuts : ⏳ à faire · 🚧 en cours · ✅ fait et documenté
 
 | Code | Compétence (résumé) | Semaine | Livrable prévu | Statut |
 |---|---|---|---|---|
-| C1 | Automatiser l'extraction de données (API, scraping, fichier, BDD, big data) | S2 | `data-pipeline/extract/` (Open Food Facts, scraping recettes, fichier Ciqual, dump OFF via DuckDB), `docs/02-bloc1-data/extraction.md` | ⏳ |
-| C2 | Développer des requêtes SQL d'extraction | S2 | `data-pipeline/extract/*.sql`, requêtes DuckDB sur l'export OFF, `docs/02-bloc1-data/requetes-sql.md` | ⏳ |
-| C3 | Développer des règles d'agrégation de données multi-sources | S2 | `data-pipeline/transform/`, `docs/02-bloc1-data/agregation.md` | ⏳ |
+| C1 | Automatiser l'extraction de données (API, scraping, fichier, BDD, big data) | S2 | `data-pipeline/extract/` (Open Food Facts, scraping recettes, fichier Ciqual, dump OFF via DuckDB), `docs/02-bloc1-data/extraction.md` | ✅ |
+| C2 | Développer des requêtes SQL d'extraction | S2 | `data-pipeline/extract/duckdb_openfoodfacts.py`, `docs/02-bloc1-data/requetes-sql.md` | ✅ (partiel — requêtes d'import SQL restantes en S3) |
+| C3 | Développer des règles d'agrégation de données multi-sources | S2 | `data-pipeline/transform/`, `docs/02-bloc1-data/agregation.md` | ✅ |
 | C4 | Créer une base de données conforme RGPD (Merise) | S3 | `data-pipeline/db/`, `docs/rgpd/registre-traitements.md` | ⏳ |
 | C5 | Développer une API REST Data | S3 | `data-pipeline/api_data/`, `docs/02-bloc1-data/api-data.md` | ⏳ |
 
