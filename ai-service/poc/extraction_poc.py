@@ -30,6 +30,7 @@ from typing import Any
 
 from openai import OpenAI
 
+from common.allergenes import ALLERGENES_REFERENTIEL, SYNONYMES_ALLERGENES
 from common.data_api_client import get_produit, get_token, list_produits
 from common.io_utils import get_data_dir, setup_logger
 
@@ -39,52 +40,13 @@ OLLAMA_BASE_URL = "http://localhost:11434/v1"
 MODEL_NAME = "llama3.2:3b"
 NB_PRODUITS_TESTES = 10
 
-ALLERGENES_REFERENTIEL = [
-    "Gluten (cereales)",
-    "Crustaces",
-    "Oeufs",
-    "Poissons",
-    "Arachides",
-    "Soja",
-    "Lait",
-    "Fruits a coque",
-    "Celeri",
-    "Moutarde",
-    "Graines de sesame",
-    "Anhydride sulfureux et sulfites",
-    "Lupin",
-    "Mollusques",
-]
-
-# Synonymes/formes ingredients par allergene : ajoutes apres une premiere
-# iteration du POC qui a montre que le modele (3B) ne reliait pas toujours
-# un synonyme ("tahini", "sesame seed paste") a la categorie officielle
-# ("Graines de sesame"), meme quand le mot etait present tel quel dans le
-# texte. Voir docs/03-bloc2-ia/poc.md, section "Iteration sur le prompt".
-SYNONYMES_ALLERGENES = {
-    "Gluten (cereales)": "ble, froment, orge, seigle, avoine, epeautre, farine, amidon de ble",
-    "Crustaces": "crevette, crabe, homard, langoustine, langouste",
-    "Oeufs": "oeuf, ovoproduit, albumine, lysozyme",
-    "Poissons": "poisson, anchois, thon, saumon, gelatine de poisson",
-    "Arachides": "arachide, cacahuete, huile d'arachide",
-    "Soja": "soja, lecithine de soja (E322), sauce soja, tofu, edamame",
-    "Lait": "lait, lactose, caseine, proteines de lait, petit-lait, whey, beurre, creme, fromage",
-    "Fruits a coque": "amande, noisette, noix, noix de cajou, pistache, noix de pecan, noix du Bresil, noix de macadamia",
-    "Celeri": "celeri, celeri-rave",
-    "Moutarde": "moutarde, graines de moutarde",
-    "Graines de sesame": "sesame, graine de sesame, tahini, purée/pate de sesame, huile de sesame",
-    "Anhydride sulfureux et sulfites": "sulfite, anhydride sulfureux, E220 a E228, metabisulfite",
-    "Lupin": "lupin, farine de lupin",
-    "Mollusques": "moule, huitre, escargot, calmar, poulpe, coquille Saint-Jacques",
-}
-
 SYSTEM_PROMPT = f"""Tu es un assistant d'analyse d'etiquettes alimentaires.
 On te fournit la liste d'ingredients d'un produit. Identifie lesquels des
 allergenes suivants (referentiel officiel, reglement UE 1169/2011) sont
 presents ou tres probablement presents dans le texte. Pour chaque
 allergene, voici des synonymes/formes a reconnaitre meme s'ils sont
 formules differemment dans le texte :
-{chr(10).join(f"- {nom} : {synonymes}" for nom, synonymes in SYNONYMES_ALLERGENES.items())}
+{chr(10).join(f"- {nom} : {', '.join(synonymes)}" for nom, synonymes in SYNONYMES_ALLERGENES.items())}
 
 Reponds UNIQUEMENT avec un objet JSON de cette forme, sans aucun texte
 autour :

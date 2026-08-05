@@ -15,6 +15,6 @@ app/
 └── incidents/          # incidents simulés et documentation de résolution
 ```
 
-Ces dossiers seront peuplés à partir de S9. Documentation détaillée : [docs/04-bloc3-app](../docs/04-bloc3-app).
+`frontend/prototype.py` existe dès S6 (prototype de démonstration, compétence C10 du Bloc 2, voir [docs/03-bloc2-ia/prototype.md](../docs/03-bloc2-ia/prototype.md)) — l'application complète (avec compte utilisateur et persistance) sera développée à partir de S9. Documentation détaillée du Bloc 3 : [docs/04-bloc3-app](../docs/04-bloc3-app).
 
 Planning : [docs/00-pilotage/planning.md](../docs/00-pilotage/planning.md).

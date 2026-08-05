@@ -53,7 +53,16 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] Script de POC (`ai-service/poc/extraction_poc.py`) testé sur 10 produits réels
 - [x] Documentation du POC, limites honnêtes et recommandation pour S6 (`docs/03-bloc2-ia/poc.md`)
 
-*(Sprints S6 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
+### Sprint S6 — API IA + prototype (21→25/04) — ✅ Fait
+- [x] Détection hybride IA + mots-clés (`ai-service/api_ia/extraction.py`)
+- [x] API REST IA avec auth JWT et limitation de débit (`ai-service/api_ia/`)
+- [x] 19 tests unitaires (auth, endpoints, statut de compatibilité)
+- [x] Conteneurisation + vérification avec Ollama réel (`docker-compose.yml`)
+- [x] Prototype Streamlit (`app/frontend/prototype.py`), testé dans un navigateur
+- [x] 9 tests d'intégration bout-en-bout (`app/tests/test_integration.py`)
+- [x] 2 bugs réels trouvés et corrigés en testant (timeout, angle mort multilingue) — voir `docs/03-bloc2-ia/prototype.md`
+
+*(Sprints S7 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
 
 ## Rituels agiles (C16)
 

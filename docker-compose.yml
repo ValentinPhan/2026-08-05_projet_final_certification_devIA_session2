@@ -33,5 +33,27 @@ services:
       postgres:
         condition: service_healthy
 
+  api_ia:
+    build:
+      context: ./ai-service
+      dockerfile: api_ia/Dockerfile
+    container_name: nutriscan-api-ia
+    environment:
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-moi-en-local}
+      API_CLIENT_ID: ${API_CLIENT_ID:-nutriscan-app}
+      API_CLIENT_SECRET: ${API_CLIENT_SECRET:-change-moi-en-local}
+      DATA_API_BASE_URL: http://api_data:8000
+      # host.docker.internal permet au conteneur de joindre Ollama, execute
+      # sur la machine hote (pas en conteneur) - fonctionne nativement avec
+      # Docker Desktop (Windows/Mac) ; extra_hosts ci-dessous couvre Linux.
+      OLLAMA_BASE_URL: http://host.docker.internal:11434/v1
+      OLLAMA_MODEL: llama3.2:3b
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8011:8000"
+    depends_on:
+      - api_data
+
 volumes:
   nutriscan_pgdata:
