@@ -35,11 +35,12 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] Script d'agrégation / nettoyage multi-sources (`transform/clean_aggregate.py`)
 - [x] Documentation C1/C2/C3 (`docs/02-bloc1-data/`)
 
-### Sprint S3 — BDD + API Data (31/03→04/04)
-- [ ] Schéma PostgreSQL (MLD), y compris chiffrement de la table des allergies
-- [ ] Script d'import des données
-- [ ] Registre des traitements RGPD (avec focus donnée de santé)
-- [ ] API REST Data (FastAPI) + doc Swagger
+### Sprint S3 — BDD + API Data (31/03→04/04) — ✅ Fait
+- [x] Schéma PostgreSQL (MLD), y compris chiffrement pgcrypto de la table des allergies
+- [x] Environnement Docker Compose (postgres + api_data)
+- [x] Script d'import des données
+- [x] Registre des traitements RGPD (avec focus donnée de santé)
+- [x] API REST Data (FastAPI) + doc Swagger
 
 *(Sprints S4 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
 

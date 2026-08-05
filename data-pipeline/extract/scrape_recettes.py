@@ -101,6 +101,12 @@ def _fetch(url: str) -> str | None:
             logger.warning("Reponse %d (tentative %d/3) sur %s", response.status_code, attempt, url)
             time.sleep(attempt * REQUEST_DELAY_SECONDS)
             continue
+        # Wikibooks sert du contenu en UTF-8, mais la detection automatique
+        # d'encodage de `requests` (basee sur les en-tetes/heuristiques) se
+        # trompe parfois sur certaines pages tres accentuees, produisant un
+        # texte corrompu (ex. "oeufs" -> "Å“ufs"). On force l'encodage plutot
+        # que de faire confiance a la detection automatique.
+        response.encoding = "utf-8"
         return response.text
     logger.warning("Abandon apres 3 tentatives sur %s", url)
     return None

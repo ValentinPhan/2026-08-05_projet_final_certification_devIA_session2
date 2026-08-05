@@ -11,7 +11,7 @@
 | INGREDIENT | Ingrédient normalisé, éventuellement rattaché à une entrée Ciqual |
 | COMPOSITION_NUTRITIONNELLE | Valeurs nutritionnelles officielles (table Ciqual, ANSES) |
 | RECETTE | Recette collectée par scraping |
-| ANALYSE | Résultat d'une analyse de compatibilité IA pour un utilisateur + un produit ou une recette |
+| ANALYSE_COMPATIBILITE | Résultat d'une analyse de compatibilité IA pour un utilisateur + un produit ou une recette |
 | TRAITEMENT_RGPD | Journal des traitements de données personnelles (registre RGPD) |
 
 ## 2. Modèle conceptuel de données (MCD)
@@ -25,9 +25,9 @@ erDiagram
     RECETTE ||--o{ RECETTE_INGREDIENT : contient
     INGREDIENT ||--o{ RECETTE_INGREDIENT : "utilise dans"
     INGREDIENT }o--|| COMPOSITION_NUTRITIONNELLE : "correspond a"
-    UTILISATEUR ||--o{ ANALYSE : demande
-    PRODUIT ||--o{ ANALYSE : "objet de"
-    RECETTE ||--o{ ANALYSE : "objet de"
+    UTILISATEUR ||--o{ ANALYSE_COMPATIBILITE : demande
+    PRODUIT ||--o{ ANALYSE_COMPATIBILITE : "objet de"
+    RECETTE ||--o{ ANALYSE_COMPATIBILITE : "objet de"
     UTILISATEUR ||--o{ TRAITEMENT_RGPD : concerne
 
     UTILISATEUR {
@@ -87,7 +87,7 @@ erDiagram
         float glucides_g
         float lipides_g
     }
-    ANALYSE {
+    ANALYSE_COMPATIBILITE {
         int id_analyse PK
         int id_utilisateur FK
         string code_barres FK
@@ -135,7 +135,7 @@ COMPOSITION_NUTRITIONNELLE(code_ciqual PK, libelle_aliment, energie_kcal, protei
 INGREDIENT(id_ingredient PK, libelle, code_ciqual FK -> COMPOSITION_NUTRITIONNELLE NULL)
 RECETTE(id_recette PK, titre, source_url, instructions, date_scraping)
 RECETTE_INGREDIENT(id_recette FK -> RECETTE, id_ingredient FK -> INGREDIENT, quantite, PRIMARY KEY(id_recette, id_ingredient))
-ANALYSE(id_analyse PK, id_utilisateur FK -> UTILISATEUR, code_barres FK -> PRODUIT NULL, id_recette FK -> RECETTE NULL, statut_compatibilite, allergenes_detectes, substitutions_proposees, date_analyse)
+ANALYSE_COMPATIBILITE(id_analyse PK, id_utilisateur FK -> UTILISATEUR, code_barres FK -> PRODUIT NULL, id_recette FK -> RECETTE NULL, statut_compatibilite, allergenes_detectes, substitutions_proposees, date_analyse)
 TRAITEMENT_RGPD(id_traitement PK, id_utilisateur FK -> UTILISATEUR, type_traitement, finalite, categorie_donnee_sante, date_traitement)
 ```
 

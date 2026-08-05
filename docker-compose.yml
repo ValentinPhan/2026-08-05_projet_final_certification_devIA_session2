@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nutriscan-postgres
+    environment:
+      POSTGRES_DB: nutriscan
+      POSTGRES_USER: nutriscan
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nutriscan_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - nutriscan_pgdata:/var/lib/postgresql/data
+      - ./data-pipeline/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nutriscan -d nutriscan"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api_data:
+    build:
+      context: ./data-pipeline
+      dockerfile: api_data/Dockerfile
+    container_name: nutriscan-api-data
+    environment:
+      DATABASE_URL: postgresql://nutriscan:${POSTGRES_PASSWORD:-nutriscan_dev}@postgres:5432/nutriscan
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-moi-en-local}
+      API_CLIENT_ID: ${API_CLIENT_ID:-nutriscan-app}
+      API_CLIENT_SECRET: ${API_CLIENT_SECRET:-change-moi-en-local}
+    ports:
+      - "8010:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  nutriscan_pgdata:
