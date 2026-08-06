@@ -79,6 +79,17 @@ Le run `#3` termine avec succès les 3 jobs, **7 min 45 s au total** :
 
 La chaîne CI/CD MLOps est donc **fonctionnelle de bout en bout sur l'infrastructure réelle de GitHub**, pas seulement en théorie : deux itérations de correction (S8) ont été nécessaires après le premier push, chacune révélant un problème qu'aucune vérification locale (`act`, tests unitaires, exécution manuelle) n'aurait pu anticiper — exactement le rôle attendu d'une intégration continue.
 
+### Quatrième run (S11) : échec sans rapport avec le pipeline
+
+Déclenché par un commit modifiant `ai-service/api_ia/extraction.py` (correctif d'incident, voir [incident-resolution.md](../04-bloc3-app/incident-resolution.md)). Les jobs `tests-donnees` (1 min 3 s) et `evaluation-modele` (5 min 0 s) réussissent normalement. Le job `packaging` échoue, mais l'erreur est explicitement côté infrastructure GitHub, avant même le démarrage du workflow :
+
+```
+Failed to resolve action download info. Error: Internal Server Error
+Error: Bad Gateway
+```
+
+Panne transitoire du service de téléchargement d'actions de GitHub (aucune action de notre workflow n'a pu commencer à s'exécuter), sans rapport avec le code ou la configuration du pipeline — non re-déclenché manuellement, consigné ici pour que l'historique des runs reste honnête plutôt que de laisser un échec inexpliqué.
+
 ## 5. Sécurité et permissions
 
 Le job `packaging` déclare explicitement des permissions minimales (`contents: read`, `packages: write`) plutôt que d'hériter des permissions par défaut du dépôt — principe de moindre privilège.
