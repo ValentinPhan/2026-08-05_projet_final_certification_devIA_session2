@@ -25,6 +25,7 @@ Usage :
 from __future__ import annotations
 
 import json
+import os
 import statistics
 import time
 from pathlib import Path
@@ -41,6 +42,16 @@ logger = setup_logger("monitoring.evaluer_modele")
 OLLAMA_BASE_URL = "http://localhost:11434/v1"
 MODEL_NAME = "llama3.2:3b"
 EXPERIMENT_NAME = "nutriscan-extraction-allergenes"
+
+# Le stockage de suivi par systeme de fichiers ("./mlruns") est le choix
+# assume ici (gratuit, sans serveur ni compte, voir docs/03-bloc2-ia/
+# monitoring-modele.md) - mais des versions recentes de MLflow le
+# considerent en fin de vie et levent une exception a moins d'un opt-in
+# explicite. Trouve via l'echec du premier run reel du pipeline CI/CD (S8) :
+# le run local avait ete installe avec une version de MLflow anterieure a
+# ce changement, ce qui masquait le probleme jusqu'a l'execution sur un
+# environnement fraichement installe.
+os.environ.setdefault("MLFLOW_ALLOW_FILE_STORE", "true")
 
 
 def run() -> Path:

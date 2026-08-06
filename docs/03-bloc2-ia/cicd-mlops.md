@@ -36,7 +36,23 @@ Un fichier de workflow ne peut être validé qu'en s'exécutant réellement — 
 2. **Mécanique du conteneur de service Ollama** : vérifiée en lançant manuellement `ollama/ollama:latest` en conteneur Docker local — démarre et sert correctement sur le port attendu.
 3. **Format exact de l'appel `POST /api/pull`** : vérifié contre la vraie instance Ollama du poste de développement (les deux formats de corps de requête, `{"name": ...}` et `{"model": ...}`, ont été testés et fonctionnent).
 4. **Chaque étape individuelle** (installation des dépendances, exécution de pytest, build Docker avec le même `Dockerfile`/contexte) a déjà été exécutée avec succès dans les sessions précédentes (S6-S7) sous une forme équivalente.
-5. **Limite assumée** : une exécution de bout en bout via `act` n'a pas pu être menée à son terme dans cet environnement de développement (le client Docker embarqué dans `act` renvoie une erreur 500 sur les appels d'inspection d'image — un problème de compatibilité entre `act` et cette installation locale de Docker Desktop, sans rapport avec le contenu du workflow lui-même : un `docker pull` classique de la même image réussit sans erreur). La vérification définitive interviendra au premier `git push` réel vers GitHub, sur des runners standards sans cette contrainte locale.
+5. **Limite assumée** : une exécution de bout en bout via `act` n'a pas pu être menée à son terme dans cet environnement de développement (le client Docker embarqué dans `act` renvoie une erreur 500 sur les appels d'inspection d'image — un problème de compatibilité entre `act` et cette installation locale de Docker Desktop, sans rapport avec le contenu du workflow lui-même : un `docker pull` classique de la même image réussit sans erreur).
+
+### Premier run réel (GitHub, runners standards)
+
+Le premier `git push` a déclenché un vrai run (`#1`) : le job `tests-donnees` a réussi, mais `evaluation-modele` a échoué avec une erreur qu'aucune vérification locale n'avait révélée :
+
+```
+mlflow.exceptions.MlflowException: The filesystem tracking backend (e.g., './mlruns') is in
+maintenance mode and will not receive further updates. [...] set `MLFLOW_ALLOW_FILE_STORE=true`
+to opt out of this exception.
+```
+
+Cause : le poste de développement avait une version de MLflow installée **avant** que ce garde-fou n'existe, alors que l'environnement CI, fraîchement provisionné, a installé une version plus récente (contrainte `mlflow>=2.15` volontairement non figée) qui l'impose. Corrigé dans `ai-service/monitoring/evaluer_modele.py` en fixant explicitement `MLFLOW_ALLOW_FILE_STORE=true` — le choix du stockage par fichiers (sans serveur ni compte) reste celui documenté en S7, seul l'opt-in explicite qu'exige une version récente de MLflow manquait. C'est exactement le type de défaillance qu'une intégration continue est censée révéler avant qu'elle n'affecte un autre poste de travail.
+
+Cette classe de problème (un environnement local « figé dans le temps » masquant une régression que seul un environnement fraîchement provisionné révèle) est elle-même un argument en faveur de la CI/CD, au-delà de la seule automatisation : **elle a rempli son rôle dès sa première exécution**.
+
+À cette occasion, deux points de robustesse supplémentaires ont aussi été corrigés dans le workflow lui-même : l'étape d'attente d'Ollama ne faisait jamais échouer explicitement le job si les 30 tentatives échouaient toutes (silencieusement ignoré plutôt que remonté en erreur), et l'étape de tirage du modèle ne vérifiait pas que le modèle était réellement disponible après coup (seul le code HTTP de la requête de streaming était implicitement supposé suffisant). Les deux vérifient désormais explicitement leur condition de succès et font échouer le job avec un message clair sinon.
 
 ## 5. Sécurité et permissions
 

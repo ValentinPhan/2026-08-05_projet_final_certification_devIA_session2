@@ -70,14 +70,27 @@ jobs:
       - name: Attendre qu'Ollama soit pret
         run: |
           for i in $(seq 1 30); do
-            curl -sf http://localhost:11434/ && break
+            if curl -sf http://localhost:11434/ > /dev/null; then
+              echo "Ollama pret apres $i tentative(s)"
+              exit 0
+            fi
             echo "en attente d'Ollama... ($i/30)"
             sleep 2
           done
+          echo "::error::Ollama n'a pas demarre a temps (30 tentatives, 60s)"
+          exit 1
 
       - name: Tirer le modele
         run: |
-          curl -sf http://localhost:11434/api/pull -d '{"name": "llama3.2:3b"}'
+          curl -sS --max-time 300 http://localhost:11434/api/pull -d '{"name": "llama3.2:3b"}'
+          echo
+          echo "Verification que le modele est bien present :"
+          if curl -sS http://localhost:11434/api/tags | grep -q "llama3.2"; then
+            echo "Modele confirme present via /api/tags"
+          else
+            echo "::error::Le modele n'apparait pas dans /api/tags apres le tirage"
+            exit 1
+          fi
 
       - name: Évaluer le modèle et journaliser dans MLflow
         run: python -m monitoring.evaluer_modele
