@@ -6,14 +6,14 @@ Kanban tenu en markdown dans ce dépôt (accessible à toute partie prenante san
 
 | Story | Titre | Bloc concerné | Statut |
 |---|---|---|---|
-| [US1](user-stories.md#us1--inscription-et-connexion-sécurisées) | Inscription et connexion sécurisées | B3 | 📋 Backlog |
-| [US2](user-stories.md#us2--définir-mon-profil-alimentaire) | Définir mon profil alimentaire | B3 | 📋 Backlog |
-| [US3](user-stories.md#us3--rechercher-un-produit) | Rechercher un produit | B1/B3 | 📋 Backlog |
-| [US4](user-stories.md#us4--alerte-allergènes-et-score-de-compatibilité) | Alerte allergènes et score de compatibilité | B2/B3 | 📋 Backlog |
-| [US5](user-stories.md#us5--rechercher-une-recette-et-ses-substitutions) | Rechercher une recette et ses substitutions | B1/B2/B3 | 📋 Backlog |
-| [US6](user-stories.md#us6--score-nutritionnel-détaillé) | Score nutritionnel détaillé | B1/B3 | 📋 Backlog |
-| [US7](user-stories.md#us7--historique-de-mes-recherches-et-analyses) | Historique de mes recherches et analyses | B3 | 📋 Backlog |
-| [US8](user-stories.md#us8--maîtrise-de-mes-données-personnelles-rgpd) | Maîtrise de mes données personnelles (RGPD) | B1/B3 | 📋 Backlog |
+| [US1](user-stories.md#us1--inscription-et-connexion-sécurisées) | Inscription et connexion sécurisées | B3 | ✅ Fait |
+| [US2](user-stories.md#us2--définir-mon-profil-alimentaire) | Définir mon profil alimentaire | B3 | ✅ Fait |
+| [US3](user-stories.md#us3--rechercher-un-produit) | Rechercher un produit | B1/B3 | ✅ Fait |
+| [US4](user-stories.md#us4--alerte-allergènes-et-score-de-compatibilité) | Alerte allergènes et score de compatibilité | B2/B3 | ✅ Fait |
+| [US5](user-stories.md#us5--rechercher-une-recette-et-ses-substitutions) | Rechercher une recette et ses substitutions | B1/B2/B3 | 🚧 Recherche + analyse faites, substitutions restantes |
+| [US6](user-stories.md#us6--score-nutritionnel-détaillé) | Score nutritionnel détaillé | B1/B3 | ✅ Fait |
+| [US7](user-stories.md#us7--historique-de-mes-recherches-et-analyses) | Historique de mes recherches et analyses | B3 | ✅ Fait |
+| [US8](user-stories.md#us8--maîtrise-de-mes-données-personnelles-rgpd) | Maîtrise de mes données personnelles (RGPD) | B1/B3 | ✅ Fait |
 | [US9](user-stories.md#us9--transparence-en-cas-dindisponibilité) | Transparence en cas d'indisponibilité | B2/B3 | 📋 Backlog |
 
 Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En cours · ✅ Fait
@@ -77,7 +77,18 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] `docs/03-bloc2-ia/cicd-mlops.md`
 - [x] **Bloc 2 (E2+E3) complet : C6 a C13 tous valides**
 
-*(Sprints S9 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
+### Sprint S9 — Application complète (12→16/05) — ✅ Fait
+- [x] Backend applicatif FastAPI (`app/backend/`) : inscription/connexion, profil chiffré (pgcrypto), historique, export/suppression RGPD
+- [x] Bug réel corrigé : `passlib` incompatible avec `bcrypt` recent (remplacé par un usage direct de `bcrypt`)
+- [x] 33 tests automatisés (14 unitaires securite + 19 d'integration contre la vraie base)
+- [x] Application Streamlit complète (`app/frontend/main.py`) : profil, recherche produit/recette, texte libre, historique, RGPD
+- [x] Bug réel corrigé : sélecteur de niveau invisible dans un `st.form` (widgets sortis du formulaire)
+- [x] Enrichissement Bloc 1 nécessaire à US6 : nutriments produits (Open Food Facts) persistés, raprochement ingrédient-Ciqual (80 % de couverture réelle)
+- [x] Vérification complète dans le navigateur : inscription → profil → analyse produit/recette (Ollama réel) → historique → export/suppression RGPD
+- [x] `docs/04-bloc3-app/dev-application.md`
+- [x] **C17 valide**
+
+*(Sprints S10 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
 
 ## Rituels agiles (C16)
 

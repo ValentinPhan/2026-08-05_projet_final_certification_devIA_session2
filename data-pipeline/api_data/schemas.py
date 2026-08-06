@@ -35,11 +35,21 @@ class ProduitOut(BaseModel):
 class ProduitDetailOut(ProduitOut):
     ingredients_texte: str
     allergenes: list[str] = Field(default_factory=list)
+    # Valeurs pour 100g/100ml declarees par Open Food Facts (US6, score
+    # nutritionnel detaille) ; absentes pour certains produits (donnee
+    # optionnelle cote source), d'ou Optional plutot qu'une valeur par defaut.
+    energie_kcal_100g: Optional[float] = None
+    proteines_g_100g: Optional[float] = None
+    glucides_g_100g: Optional[float] = None
+    lipides_g_100g: Optional[float] = None
 
 
 class IngredientOut(BaseModel):
     libelle: str
     quantite: Optional[str] = None
+    # Rapprochement Ciqual (S9, cf. load/import_data.py::matcher_code_ciqual) :
+    # None si aucun aliment Ciqual n'a pu etre rapproche de ce libelle brut.
+    code_ciqual: Optional[str] = None
 
 
 class RecetteOut(BaseModel):

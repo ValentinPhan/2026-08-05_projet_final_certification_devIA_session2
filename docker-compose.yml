@@ -55,5 +55,20 @@ services:
     depends_on:
       - api_data
 
+  app_backend:
+    build:
+      context: ./app
+      dockerfile: backend/Dockerfile
+    container_name: nutriscan-app-backend
+    environment:
+      DATABASE_URL: postgresql://nutriscan:${POSTGRES_PASSWORD:-nutriscan_dev}@postgres:5432/nutriscan
+      RGPD_ENCRYPTION_KEY: ${RGPD_ENCRYPTION_KEY:-change-moi-en-local}
+      APP_JWT_SECRET_KEY: ${APP_JWT_SECRET_KEY:-change-moi-en-local}
+    ports:
+      - "8012:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   nutriscan_pgdata:

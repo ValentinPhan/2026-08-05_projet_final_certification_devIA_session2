@@ -32,6 +32,8 @@ from __future__ import annotations
 import csv
 import json
 import math
+import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -66,6 +68,65 @@ OFF_ALLERGEN_TO_REFERENTIEL = {
 
 def _load_json(path: Path) -> list[dict[str, Any]]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+# ---------------------------------------------------------------------------
+# Rapprochement ingredient de recette <-> aliment Ciqual (S9, prepare le score
+# nutritionnel detaille, US6). Approche volontairement legere (mot-cle
+# significatif, pas de NLP) : les libelles Ciqual sont des noms d'aliments
+# generiques ("Aubergine, crue") tandis que le texte scrape est une ligne de
+# recette brute ("3 aubergines,") - un rapprochement exact echouerait presque
+# toujours. Teste sur les donnees reelles avant integration (voir
+# docs/04-bloc3-app/dev-application.md pour le taux de rapprochement obtenu) ;
+# les ingredients non rapproches gardent code_ciqual = NULL, comme prevu
+# depuis S2 (voir commentaire plus haut sur la portee assumee de ce script).
+# ---------------------------------------------------------------------------
+_MOTS_VIDES = {
+    "de", "d", "du", "des", "la", "le", "les", "au", "aux", "un", "une", "et", "a",
+    "g", "kg", "mg", "l", "cl", "ml", "c", "cs", "cc",
+    "gousse", "gousses", "tranche", "tranches", "pincee", "pincees", "sachet", "sachets",
+    "botte", "bottes", "morceau", "morceaux", "verre", "verres", "boite", "boites",
+    "cuillere", "cuilleres", "cuilleree", "cuillerees",
+}
+
+
+def _normaliser_ascii(texte: str) -> str:
+    texte = unicodedata.normalize("NFKD", texte)
+    return "".join(c for c in texte if not unicodedata.combining(c)).lower()
+
+
+def _mots_significatifs(texte: str) -> list[str]:
+    """Extrait les mots significatifs d'un texte (accents/casse/chiffres/unites/mots vides retires)."""
+    texte = re.sub(r"[^a-z\s]", " ", _normaliser_ascii(texte))
+    return [mot for mot in texte.split() if mot and mot not in _MOTS_VIDES]
+
+
+def build_ciqual_lookup(conn: PgConnection) -> dict[str, str]:
+    """Construit un dictionnaire {premier mot significatif du libelle Ciqual -> code_ciqual}.
+
+    Premiere entree rencontree conservee en cas de collision (ex. plusieurs
+    libelles commencant par le meme mot) : approximation assumee, pas une
+    resolution semantique complete.
+    """
+    lookup: dict[str, str] = {}
+    with conn.cursor() as cur:
+        cur.execute("SELECT code_ciqual, libelle_aliment FROM composition_nutritionnelle")
+        for code_ciqual, libelle_aliment in cur.fetchall():
+            base = libelle_aliment.split(",")[0]
+            mots = _mots_significatifs(base)
+            if not mots:
+                continue
+            lookup.setdefault(mots[0], code_ciqual)
+    return lookup
+
+
+def matcher_code_ciqual(ingredient_brut: str, lookup: dict[str, str]) -> str | None:
+    """Cherche le premier mot significatif de l'ingredient present dans le dictionnaire Ciqual."""
+    for mot in _mots_significatifs(ingredient_brut):
+        code_ciqual = lookup.get(mot)
+        if code_ciqual:
+            return code_ciqual
+    return None
 
 
 def _none_if_nan(value: Any) -> Any:
@@ -129,14 +190,21 @@ def import_produits(conn: PgConnection, path: Path, allergen_map: dict[str, int]
         for produit in produits:
             cur.execute(
                 """
-                INSERT INTO produit (code_barres, nom, marque, categorie, nutri_score, ingredients_texte)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO produit (
+                    code_barres, nom, marque, categorie, nutri_score, ingredients_texte,
+                    energie_kcal_100g, proteines_g_100g, glucides_g_100g, lipides_g_100g
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (code_barres) DO UPDATE SET
                     nom = EXCLUDED.nom,
                     marque = EXCLUDED.marque,
                     categorie = EXCLUDED.categorie,
                     nutri_score = EXCLUDED.nutri_score,
-                    ingredients_texte = EXCLUDED.ingredients_texte
+                    ingredients_texte = EXCLUDED.ingredients_texte,
+                    energie_kcal_100g = EXCLUDED.energie_kcal_100g,
+                    proteines_g_100g = EXCLUDED.proteines_g_100g,
+                    glucides_g_100g = EXCLUDED.glucides_g_100g,
+                    lipides_g_100g = EXCLUDED.lipides_g_100g
                 """,
                 (
                     produit["code_barres"],
@@ -145,6 +213,10 @@ def import_produits(conn: PgConnection, path: Path, allergen_map: dict[str, int]
                     produit.get("categorie") or None,
                     produit.get("nutri_score"),
                     produit["ingredients_texte"],
+                    produit.get("energie_kcal_100g"),
+                    produit.get("proteines_g_100g"),
+                    produit.get("glucides_g_100g"),
+                    produit.get("lipides_g_100g"),
                 ),
             )
             cur.execute("DELETE FROM produit_allergene WHERE code_barres = %s", (produit["code_barres"],))
@@ -165,11 +237,13 @@ def import_produits(conn: PgConnection, path: Path, allergen_map: dict[str, int]
     return len(produits)
 
 
-def import_recettes(conn: PgConnection, path: Path) -> int:
+def import_recettes(conn: PgConnection, path: Path, ciqual_lookup: dict[str, str]) -> int:
     if not path.exists():
         logger.warning("Fichier introuvable, etape ignoree : %s", path)
         return 0
     recettes = _load_json(path)
+    nb_rapproches = 0
+    nb_ingredients = 0
     with conn.cursor() as cur:
         for recette in recettes:
             cur.execute(
@@ -186,11 +260,15 @@ def import_recettes(conn: PgConnection, path: Path) -> int:
             id_recette = cur.fetchone()[0]
             cur.execute("DELETE FROM recette_ingredient WHERE id_recette = %s", (id_recette,))
             for ingredient_brut in recette.get("ingredients_bruts", []):
+                nb_ingredients += 1
+                code_ciqual = matcher_code_ciqual(ingredient_brut, ciqual_lookup)
+                if code_ciqual:
+                    nb_rapproches += 1
                 cur.execute(
-                    "INSERT INTO ingredient (libelle) VALUES (%s) "
-                    "ON CONFLICT (libelle) DO UPDATE SET libelle = EXCLUDED.libelle "
+                    "INSERT INTO ingredient (libelle, code_ciqual) VALUES (%s, %s) "
+                    "ON CONFLICT (libelle) DO UPDATE SET code_ciqual = EXCLUDED.code_ciqual "
                     "RETURNING id_ingredient",
-                    (ingredient_brut,),
+                    (ingredient_brut, code_ciqual),
                 )
                 id_ingredient = cur.fetchone()[0]
                 cur.execute(
@@ -200,6 +278,10 @@ def import_recettes(conn: PgConnection, path: Path) -> int:
                 )
     conn.commit()
     logger.info("Recettes : %d importee(s)/mise(s) a jour", len(recettes))
+    logger.info(
+        "Ingredients rapproches d'un aliment Ciqual : %d/%d (%.0f%%)",
+        nb_rapproches, nb_ingredients, 100 * nb_rapproches / nb_ingredients if nb_ingredients else 0,
+    )
     return len(recettes)
 
 
@@ -210,7 +292,9 @@ def run() -> None:
         logger.info("%d allergene(s) de reference charge(s)", len(allergen_map))
         import_ciqual(conn, PROCESSED_DIR / "composition_nutritionnelle.csv")
         import_produits(conn, PROCESSED_DIR / "produits.json", allergen_map)
-        import_recettes(conn, PROCESSED_DIR / "recettes.json")
+        ciqual_lookup = build_ciqual_lookup(conn)
+        logger.info("%d mot(s)-cle(s) Ciqual indexe(s) pour le rapprochement", len(ciqual_lookup))
+        import_recettes(conn, PROCESSED_DIR / "recettes.json", ciqual_lookup)
     finally:
         conn.close()
 

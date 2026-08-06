@@ -123,7 +123,8 @@ def list_produits(
 )
 def get_produit(code_barres: str, cur: RealDictCursor = Depends(get_cursor)) -> ProduitDetailOut:
     cur.execute(
-        "SELECT code_barres, nom, marque, categorie, nutri_score, ingredients_texte "
+        "SELECT code_barres, nom, marque, categorie, nutri_score, ingredients_texte, "
+        "energie_kcal_100g, proteines_g_100g, glucides_g_100g, lipides_g_100g "
         "FROM produit WHERE code_barres = %s",
         (code_barres,),
     )
@@ -177,7 +178,7 @@ def get_recette(id_recette: int, cur: RealDictCursor = Depends(get_cursor)) -> R
         raise HTTPException(status_code=404, detail="Recette introuvable")
 
     cur.execute(
-        "SELECT i.libelle, ri.quantite FROM recette_ingredient ri "
+        "SELECT i.libelle, ri.quantite, i.code_ciqual FROM recette_ingredient ri "
         "JOIN ingredient i ON i.id_ingredient = ri.id_ingredient "
         "WHERE ri.id_recette = %s",
         (id_recette,),

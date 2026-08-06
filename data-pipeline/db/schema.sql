@@ -56,6 +56,11 @@ CREATE TABLE IF NOT EXISTS utilisateur_allergene (
     id_utilisateur  BIGINT NOT NULL REFERENCES utilisateur(id_utilisateur) ON DELETE CASCADE,
     id_allergene    SMALLINT NOT NULL REFERENCES allergene(id_allergene) ON DELETE RESTRICT,
     niveau_chiffre  BYTEA NOT NULL,
+    -- Horodatage de la derniere modification de cette ligne (US2 : "chaque
+    -- modification est horodatee") - ajoute en S9 en construisant reellement
+    -- l'ecriture de ce profil (l'ecriture elle-meme n'existait pas avant
+    -- l'application, Bloc 3 ; seule la structure etait posee en S3).
+    date_maj        TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (id_utilisateur, id_allergene)
 );
 
@@ -69,6 +74,14 @@ CREATE TABLE IF NOT EXISTS produit (
     categorie       TEXT,
     nutri_score     CHAR(1) CHECK (nutri_score IN ('a', 'b', 'c', 'd', 'e')),
     ingredients_texte TEXT NOT NULL,
+    -- Valeurs nutritionnelles pour 100g/100ml, telles que declarees par Open
+    -- Food Facts (champ "nutriments" deja recupere par extract/openfoodfacts_api.py
+    -- mais jusqu'ici non persiste) - necessaire au score nutritionnel detaille
+    -- (US6, S9) au-dela du seul Nutri-Score (une lettre A-E).
+    energie_kcal_100g REAL,
+    proteines_g_100g  REAL,
+    glucides_g_100g   REAL,
+    lipides_g_100g    REAL,
     date_import     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

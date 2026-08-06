@@ -59,7 +59,7 @@ Registre tenu au sens de l'article 30 du RGPD, couvrant les traitements mis en �
 
 ## Droits des personnes concernées
 
-- **Droit d'accès / de rectification** : depuis l'espace personnel (profil, historique).
-- **Droit à l'effacement** : US8 — suppression de compte avec double confirmation, cascade sur `utilisateur_allergene`, `analyse_compatibilite` et `traitement_rgpd` (contraintes `ON DELETE CASCADE`, voir schema.sql).
-- **Droit à la portabilité** : export des données du compte (à implémenter au niveau de l'application, Bloc 3).
-- **Délai de réponse** : 1 mois maximum à compter de la demande (art. 12 RGPD).
+- **Droit d'accès / de rectification** : depuis l'espace personnel (profil, historique) — implémenté (`GET`/`PUT /profil`, `GET /historique`, S9).
+- **Droit à l'effacement** : US8 — suppression de compte avec double confirmation (case à cocher + ressaisie de l'email), cascade sur `utilisateur_allergene`, `analyse_compatibilite` et `traitement_rgpd` (contraintes `ON DELETE CASCADE`, voir schema.sql) — implémenté et vérifié dans le navigateur (`DELETE /rgpd/compte`, S9). Limite connue : le journal de traçabilité (`traitement_rgpd`) étant lui-même en cascade, il ne survit pas à la suppression du compte (voir [dev-application.md](../04-bloc3-app/dev-application.md), §5).
+- **Droit à la portabilité** : export JSON du compte, du profil et de l'historique — implémenté (`GET /rgpd/export`, S9).
+- **Délai de réponse** : 1 mois maximum à compter de la demande (art. 12 RGPD) — sans objet pour l'export/la suppression en libre-service (immédiats).

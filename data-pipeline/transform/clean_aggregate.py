@@ -51,6 +51,21 @@ def _first_category(categories_tags: list[str] | None) -> str:
     return tag.split(":", 1)[-1].replace("-", " ")
 
 
+def _nutriment_100g(nutriments: dict[str, Any] | None, cle: str) -> float | None:
+    """Lit une valeur pour 100g/100ml dans le sous-objet `nutriments` d'Open Food Facts.
+
+    Champ deja recupere par extract/openfoodfacts_api.py (voir PRODUCT_FIELDS)
+    mais jusqu'ici jamais persiste au-dela de l'extraction brute - necessaire
+    au score nutritionnel detaille (US6, S9), au-dela du seul Nutri-Score.
+    """
+    if not nutriments:
+        return None
+    valeur = nutriments.get(f"{cle}_100g")
+    if valeur is None or not isinstance(valeur, (int, float)):
+        return None
+    return float(valeur)
+
+
 def clean_produits(raw_products: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Nettoie les produits Open Food Facts : entrees corrompues supprimees, champs homogeneises."""
     seen_codes: set[str] = set()
@@ -78,6 +93,7 @@ def clean_produits(raw_products: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
         seen_codes.add(code)
         nutriscore = _clean_text(product.get("nutriscore_grade")).lower()
+        nutriments = product.get("nutriments")
         cleaned.append({
             "code_barres": code,
             "nom": name,
@@ -86,6 +102,10 @@ def clean_produits(raw_products: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "nutri_score": nutriscore if nutriscore and nutriscore != "unknown" else None,
             "ingredients_texte": ingredients,
             "allergenes_off": product.get("allergens_tags") or [],
+            "energie_kcal_100g": _nutriment_100g(nutriments, "energy-kcal"),
+            "proteines_g_100g": _nutriment_100g(nutriments, "proteins"),
+            "glucides_g_100g": _nutriment_100g(nutriments, "carbohydrates"),
+            "lipides_g_100g": _nutriment_100g(nutriments, "fat"),
         })
 
     logger.info(
