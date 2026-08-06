@@ -75,11 +75,9 @@ Objectif **WCAG 2.1 AA / RGAA** sur l'ensemble des interfaces, avec une exigence
 ## 7. Déploiement
 
 - **Développement** : Docker Compose local (PostgreSQL + les 3 services + Ollama), reproductible par `docker compose up`.
-- **Pré-production** (nécessaire pour la démo à l'oral et pour la preuve de concept exigée en bloc 3) : arbitrage détaillé en S8-S10. Point d'attention spécifique à ce projet : Ollama nécessitant des ressources CPU/RAM non garanties sur un free tier classique, deux options seront comparées à ce moment-là — (a) héberger le modèle local sur une machine capable de le supporter (ex. Hugging Face Spaces avec CPU dédié), ou (b) prévoir un mode de repli documenté (modèle quantifié plus léger) pour la démo en ligne, tout en gardant l'exécution 100 % locale comme configuration de référence documentée dans le rapport.
-- Base Postgres et API `data-pipeline`/`ai-service` : hébergement gratuit adapté à un usage étudiant (ex. Neon/Supabase pour Postgres, Render/Railway free tier pour les API).
+- **Pré-production — décision prise en S10** : une mise en ligne réelle chez un hébergeur tiers (Render/Railway/Hugging Face Spaces...) exigerait de créer un compte externe, ce qui contredit le principe zéro-compte posé ci-dessus. Choix retenu : la CD ([`docs/04-bloc3-app/cd.md`](../04-bloc3-app/cd.md)) publie des images Docker versionnées sur **GitHub Container Registry** (jetons `GITHUB_TOKEN` intégrés, zéro nouveau compte) pour les trois composants ayant une CI/CD (`api_ia` depuis S8 ; `app_backend` et `app_frontend` depuis S10). Le déploiement effectif chez un hébergeur reste une étape ultérieure explicitement documentée comme telle, plutôt que silencieusement escamotée.
 
 ## 8. Points ouverts (à trancher plus tard, sans bloquer le cadrage)
 
 - Modèle Ollama définitif (taille/quantification) : après benchmark S4 (`docs/03-bloc2-ia/benchmark-services-ia.md`).
-- Hébergement pré-production définitif, en particulier la contrainte de ressources pour Ollama : après CI/CD S8/S10.
 - Outil de monitoring applicatif définitif (Prometheus+Grafana vs solution hébergée gratuite) : après S11.

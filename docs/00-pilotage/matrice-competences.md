@@ -35,8 +35,8 @@ Statuts : ⏳ à faire · 🚧 en cours · ✅ fait et documenté
 | C15 | Concevoir le cadre technique de l'application | S1 | `docs/01-cadrage/architecture.md` | ✅ |
 | C16 | Coordonner la réalisation technique (agilité/MLOps) | S1 + continu | `docs/01-cadrage/backlog.md` (+ GitHub Projects) | ✅ |
 | C17 | Développer les composants techniques et interfaces de l'application | S9 | `app/frontend/`, `app/backend/`, `docs/04-bloc3-app/dev-application.md` | ✅ |
-| C18 | Automatiser les phases de tests du code source (CI) | S10 | `.github/workflows/ci-app.yml`, `docs/04-bloc3-app/ci.md` | ⏳ |
-| C19 | Créer un processus de livraison continue (CD) | S10 | `.github/workflows/cd-app.yml`, `docs/04-bloc3-app/cd.md` | ⏳ |
+| C18 | Automatiser les phases de tests du code source (CI) | S10 | `.github/workflows/ci-app.yml`, `docs/04-bloc3-app/ci.md` | ✅ |
+| C19 | Créer un processus de livraison continue (CD) | S10 | `.github/workflows/cd-app.yml`, `docs/04-bloc3-app/cd.md` | ✅ |
 | C20 | Surveiller une application IA (monitoring, journalisation) | S11 | `app/monitoring/`, `docs/04-bloc3-app/monitoring-app.md` | ⏳ |
 | C21 | Résoudre les incidents techniques | S11 | `app/incidents/`, `docs/04-bloc3-app/incident-resolution.md` | ⏳ |
 

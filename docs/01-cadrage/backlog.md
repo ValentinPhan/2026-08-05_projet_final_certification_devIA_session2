@@ -88,7 +88,17 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] `docs/04-bloc3-app/dev-application.md`
 - [x] **C17 valide**
 
-*(Sprints S10 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
+### Sprint S10 — CI/CD Application (19→23/05) — ✅ Fait
+- [x] Workflow CI applicatif (`.github/workflows/ci-app.yml`) : lint (ruff) + tests backend contre un vrai service container PostgreSQL
+- [x] Decision documentee : pas d'hebergement pre-prod chez un tiers (aurait exige un compte externe) - la CD publie des images Docker versionnees sur GHCR (voir `architecture.md`, §7)
+- [x] Dockerfile du frontend Streamlit (jusque-la execute hors conteneur)
+- [x] Workflow CD applicatif (`.github/workflows/cd-app.yml`) : publication backend + frontend sur GHCR, declenchee uniquement apres succes de la CI (`workflow_run`)
+- [x] Bug reel corrige : Starlette 1.x exige le paquet `httpx2` pour `TestClient`, absent de `backend/requirements.txt`
+- [x] Verifie en conditions reelles sur GitHub Actions : run CI #1 echoue (bug ci-dessus), run #2 reussi (43s) ; run CD #1 correctement `skipped` (CI en echec), run CD #2 reussi (1m24s), images confirmees sur la page Packages du compte GitHub
+- [x] `docs/04-bloc3-app/ci.md` et `cd.md`
+- [x] **C18 et C19 valides**
+
+*(Sprints S11 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
 
 ## Rituels agiles (C16)
 
