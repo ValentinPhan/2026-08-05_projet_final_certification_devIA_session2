@@ -1,0 +1,14 @@
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.lint]
+# Perimetre volontairement restreint (C18, S10) : erreurs reelles (pyflakes),
+# style de base (pycodestyle) et tri des imports - pas les suggestions de
+# modernisation de syntaxe (regle "UP"), qui proposeraient `X | None` au lieu
+# de `typing.Optional` : ce projet cible aussi Python 3.9 en developpement
+# local, et `X | None` casse a l'exécution dans les modeles Pydantic sous
+# 3.9 (voir data-pipeline/api_data/schemas.py, backend/schemas.py).
+select = ["E", "F", "I"]
+ignore = [
+    "E501",  # longueur de ligne non contrainte (commentaires explicatifs longs, deja la convention du projet)
+]

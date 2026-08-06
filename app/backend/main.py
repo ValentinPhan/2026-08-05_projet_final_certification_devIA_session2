@@ -20,11 +20,11 @@ from __future__ import annotations
 
 import os
 from contextlib import contextmanager
-from typing import Iterator, Optional
+from typing import Iterator
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
-from psycopg2.extras import RealDictCursor
 from psycopg2.extensions import connection as PgConnection
+from psycopg2.extras import RealDictCursor
 
 from .common.db import get_connection
 from .schemas import (

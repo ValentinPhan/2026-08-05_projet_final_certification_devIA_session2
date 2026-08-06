@@ -1,0 +1,75 @@
+name: CD Application - Bloc 3
+
+# Competence C19 : creer un processus de livraison continue.
+# Fichier distinct de ci-app.yml (C18) a la demande du planning
+# (docs/00-pilotage/planning.md, S10) : la CD ne se declenche qu'apres le
+# succes de la CI sur main (declencheur workflow_run), pour garantir que
+# seule une version testee est publiee - le sens meme de separer CI et CD
+# plutot que d'enchainer aveuglement sur push.
+#
+# Perimetre du "deploiement pre-prod" (choix documente, voir
+# docs/04-bloc3-app/cd.md) : publication d'images Docker versionnees sur
+# GitHub Container Registry (GITHUB_TOKEN fourni automatiquement, comme pour
+# l'API IA en S8) - pas de mise en ligne chez un hebergeur tiers, ce qui
+# necessiterait de creer un compte externe et irait a l'encontre du principe
+# "zero compte/cle externe" pose des le choix du sujet (docs/01-cadrage/
+# architecture.md).
+on:
+  workflow_run:
+    workflows: ["CI Application - Bloc 3"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  packaging:
+    name: Packaging et publication des images Docker (backend + frontend)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Sur un declenchement workflow_run, github.sha pointe par defaut
+          # sur le depot au moment du declenchement de l'evenement CD lui-meme,
+          # pas sur le commit reellement teste par la CI - on checkout donc
+          # explicitement le commit associe au run CI declencheur.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Connexion a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ghcr.io exige un nom de depot entierement en minuscules - meme
+      # correctif que la chaine MLOps du Bloc 2 (S8), trouve via un vrai
+      # echec de run a l'epoque plutot que suppose.
+      - name: Calculer le prefixe d'image en minuscules
+        id: image
+        run: echo "prefix=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Build et publication de l'image backend applicatif
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          file: ./app/backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.image.outputs.prefix }}/nutriscan-app-backend:latest
+            ${{ steps.image.outputs.prefix }}/nutriscan-app-backend:${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Build et publication de l'image frontend Streamlit
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          file: ./app/frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.image.outputs.prefix }}/nutriscan-app-frontend:latest
+            ${{ steps.image.outputs.prefix }}/nutriscan-app-frontend:${{ github.event.workflow_run.head_sha || github.sha }}

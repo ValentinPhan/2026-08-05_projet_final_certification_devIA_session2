@@ -1,0 +1,111 @@
+name: CI Application - Bloc 3
+
+# Competence C18 : automatiser les phases de tests du code source.
+# Fichier distinct de mlops-ci-cd.yml (Bloc 2, S8) : les deux competences
+# (C13 MLOps vs C18 CI applicative) sont evaluees separement, et le
+# planning (docs/00-pilotage/planning.md, S10) attend deux workflows
+# distincts pour l'application (ci-app.yml / cd-app.yml).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - ".github/workflows/ci-app.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/**"
+  workflow_dispatch: {}
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  # Etape 1 : analyse statique (rapide, sans base de donnees).
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer ruff
+        run: pip install ruff
+
+      - name: Analyser le code de l'application
+        run: ruff check backend frontend tests
+
+  # Etape 2 : tests du backend applicatif contre une vraie instance PostgreSQL
+  # (service container, meme mecanique que le conteneur Ollama de S8) - le
+  # profil chiffre (pgcrypto) et les contraintes reelles du schema (cle
+  # etrangere produit<->historique, contrainte produit-ou-recette) ne peuvent
+  # pas etre verifies avec une base simulee.
+  tests-backend:
+    name: Tests backend (PostgreSQL réel)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: nutriscan
+          POSTGRES_USER: nutriscan
+          POSTGRES_PASSWORD: nutriscan_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nutriscan -d nutriscan"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://nutriscan:nutriscan_ci@localhost:5432/nutriscan
+      APP_JWT_SECRET_KEY: ci-app-jwt-secret-au-moins-32-octets-de-long
+      RGPD_ENCRYPTION_KEY: ci-rgpd-encryption-key
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dependances du backend
+        run: pip install -r backend/requirements.txt pytest
+
+      # Le schema est habituellement charge automatiquement au premier
+      # demarrage d'un conteneur Postgres local via docker-entrypoint-initdb.d
+      # (voir docker-compose.yml) - un service container GitHub Actions
+      # demarre avant le checkout du depot et ne peut donc pas monter ce
+      # fichier de cette facon : on l'applique explicitement ici, avec le
+      # client psycopg2 deja installe (backend/requirements.txt), plutot que
+      # d'ajouter une dependance systeme (postgresql-client) pour ce seul usage.
+      - name: Appliquer le schema PostgreSQL et semer un produit de test
+        run: |
+          python <<'PY'
+          import pathlib
+          import psycopg2
+
+          conn = psycopg2.connect("postgresql://nutriscan:nutriscan_ci@localhost:5432/nutriscan")
+          conn.autocommit = True
+          with conn.cursor() as cur:
+              cur.execute(pathlib.Path("../data-pipeline/db/schema.sql").read_text(encoding="utf-8"))
+              # Sans produit en base, les tests d'historique/export lies a un
+              # code-barres reel seraient ignores (voir la fixture
+              # `code_barres_existant`, backend/tests/test_main.py) - un jeu
+              # minimal suffit a les executer reellement en CI.
+              cur.execute(
+                  "INSERT INTO produit (code_barres, nom, ingredients_texte) "
+                  "VALUES ('0000000000001', 'Produit de test CI', 'eau, sucre') "
+                  "ON CONFLICT (code_barres) DO NOTHING"
+              )
+          conn.close()
+          PY
+
+      - name: Tests unitaires de securite (sans IO)
+        run: pytest backend/tests/test_security.py -v
+
+      - name: Tests d'integration backend (vraie base PostgreSQL)
+        run: pytest backend/tests/test_main.py -v

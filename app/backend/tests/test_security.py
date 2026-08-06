@@ -5,12 +5,11 @@ ou en memoire (voir backend/security.py).
 """
 from __future__ import annotations
 
-import time
-
 import jwt
 import pytest
 
 from backend.security import (
+    RATE_LIMIT_MAX_TENTATIVES,
     creer_jeton_session,
     email_valide,
     enregistrer_echec_connexion,
@@ -19,7 +18,6 @@ from backend.security import (
     utilisateur_courant,
     verifier_mot_de_passe,
     verrouille_pour_bruteforce,
-    RATE_LIMIT_MAX_TENTATIVES,
 )
 
 
