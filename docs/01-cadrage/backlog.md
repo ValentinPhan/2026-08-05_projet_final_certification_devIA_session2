@@ -116,7 +116,11 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] README racine complété avec une procédure d'installation réelle (jusque-là marquée « à compléter »)
 - [x] **Les 21 compétences sont couvertes, documentées et synthétisées par épreuve**
 
-*(Sprint S13 (préparation orale) : voir [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; carte ajoutée le moment venu, pas d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
+### Sprint S13 — Préparation orale (09→13/06) — ✅ Fait
+- [x] Support de présentation modulaire (`docs/06-preparation-orale/slides.md`), un module par épreuve (E1-E5) plus une introduction et une conclusion communes
+- [x] Script de démonstration live (`script-demo.md`) : parcours E3 (résilience du service IA, panne d'Ollama provoquée en direct) et parcours E4 (application complète), avec checklist de préparation et plan de repli
+- [x] Anticipation des questions du jury (`questions-jury.md`) : questions transverses, par bloc, et questions « pièges », toutes ancrées sur des faits réels déjà documentés dans les rapports E1-E5
+- [x] **Fin du planning des 13 semaines — les 21 compétences sont couvertes, documentées, synthétisées et prêtes pour l'oral**
 
 ## Rituels agiles (C16)
 

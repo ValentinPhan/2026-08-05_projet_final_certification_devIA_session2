@@ -26,6 +26,7 @@ Le projet est structuré pour couvrir, de façon traçable, les **21 compétence
 - 📌 [Backlog agile](docs/01-cadrage/backlog.md)
 - 🔒 [Registre RGPD](docs/rgpd) (dès S3) — attention particulière portée aux allergies, donnée de santé au sens de l'article 9 du RGPD
 - 📝 [Rapports professionnels par épreuve (E1-E5)](docs/05-rapports-professionnels/README.md)
+- 🎤 [Préparation de l'oral](docs/06-preparation-orale) — support de présentation, script de démo, anticipation des questions du jury
 
 ## Installation et lancement
 
