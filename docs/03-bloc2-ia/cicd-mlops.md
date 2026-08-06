@@ -67,6 +67,18 @@ repository name must be lowercase
 
 Cause : GitHub Container Registry exige un nom de dépôt entièrement en minuscules, mais `github.repository_owner` reflète la casse réelle du compte GitHub (`ValentinPhan`), non forcément en minuscules. Corrigé en ajoutant une étape qui calcule le nom d'image en minuscules (`tr '[:upper:]' '[:lower:]'`) avant de l'utiliser dans les tags — un détail qu'aucune vérification locale (`act`, tests unitaires) ne pouvait révéler puisqu'il dépend du nom réel du compte GitHub du dépôt distant.
 
+### Troisième run réel : succès complet
+
+Le run `#3` termine avec succès les 3 jobs, **7 min 45 s au total** :
+
+| Job | Durée | Résultat |
+|---|---|---|
+| `tests-donnees` | 51 s | ✅ |
+| `evaluation-modele` | 5 min 2 s | ✅ — modèle réellement évalué sur Ollama, métriques journalisées dans MLflow |
+| `packaging` | 1 min 44 s | ✅ — image publiée sur `ghcr.io/valentinphan/nutriscan-api-ia` |
+
+La chaîne CI/CD MLOps est donc **fonctionnelle de bout en bout sur l'infrastructure réelle de GitHub**, pas seulement en théorie : deux itérations de correction (S8) ont été nécessaires après le premier push, chacune révélant un problème qu'aucune vérification locale (`act`, tests unitaires, exécution manuelle) n'aurait pu anticiper — exactement le rôle attendu d'une intégration continue.
+
 ## 5. Sécurité et permissions
 
 Le job `packaging` déclare explicitement des permissions minimales (`contents: read`, `packages: write`) plutôt que d'hériter des permissions par défaut du dépôt — principe de moindre privilège.
