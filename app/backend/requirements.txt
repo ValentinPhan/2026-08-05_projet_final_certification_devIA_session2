@@ -4,3 +4,10 @@ psycopg2-binary>=2.9
 python-dotenv>=1.0
 pyjwt>=2.9
 bcrypt>=4.0
+pytest>=8.0
+# Requis par starlette.testclient.TestClient a partir de Starlette 1.x (voir
+# ai-service/requirements.txt pour le meme besoin) - trouve via l'echec du
+# premier run reel de la CI application (S10) : la version de Starlette
+# resolue en CI (plus recente que celle du poste de developpement) impose ce
+# nouveau paquet, absent jusque-la de cette liste.
+httpx2>=2.0
