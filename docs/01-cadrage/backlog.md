@@ -70,7 +70,14 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] Decouverte via le monitoring : biais de sur-detection du gluten du modele local, documente avec recommandations
 - [x] `docs/03-bloc2-ia/monitoring-modele.md` et `tests-modele.md`
 
-*(Sprints S8 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
+### Sprint S8 — CI/CD MLOps (05→09/05) — ✅ Fait
+- [x] Workflow GitHub Actions a 3 etapes (`.github/workflows/mlops-ci-cd.yml`) : tests donnees -> evaluation modele (Ollama reel, MLflow) -> packaging (GHCR)
+- [x] Bug de syntaxe YAML reel trouve et corrige via `act`
+- [x] Mecanique du conteneur de service Ollama et de l'API `/api/pull` verifiees en conditions reelles
+- [x] `docs/03-bloc2-ia/cicd-mlops.md`
+- [x] **Bloc 2 (E2+E3) complet : C6 a C13 tous valides**
+
+*(Sprints S9 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
 
 ## Rituels agiles (C16)
 

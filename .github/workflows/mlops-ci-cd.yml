@@ -1,0 +1,127 @@
+name: CI/CD MLOps - Service IA
+
+# Declencheurs (competence C13, critere "declencheurs integres comme
+# prealablement definis") :
+# - push sur main : execute la chaine complete jusqu'au packaging/publication
+# - pull_request vers main : execute les tests seulement (pas de publication
+#   d'image depuis une branche non fusionnee)
+# - workflow_dispatch : declenchement manuel depuis l'onglet Actions
+# Filtre de chemin : la chaine ne se declenche que si le service IA (ou la
+# chaine elle-meme) change, pas sur une modification du Bloc 1 ou du Bloc 3.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ai-service/**"
+      - ".github/workflows/mlops-ci-cd.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "ai-service/**"
+  workflow_dispatch: {}
+
+defaults:
+  run:
+    working-directory: ai-service
+
+jobs:
+  # Etape 1 : tests de donnees et de non-regression (rapides, sans appel reseau).
+  tests-donnees:
+    name: Tests données (golden dataset + mots-clés)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dependances
+        run: pip install -r requirements.txt
+
+      - name: Valider le jeu de donnees de reference et la detection par mots-cles
+        run: pytest api_ia/tests/test_modele_qualite.py -k "not hybride" -v
+
+      - name: Tests de l'API IA (auth, endpoints, logique de compatibilite)
+        run: pytest api_ia/tests/test_extraction.py api_ia/tests/test_main.py -v
+
+  # Etape 2 : evaluation et validation du modele avec le vrai service IA
+  # (pas d'etape d'entrainement : le modele est pre-entraine, voir
+  # benchmark-services-ia.md - "entrainement" ne s'applique pas a ce projet).
+  evaluation-modele:
+    name: Évaluation et validation du modèle (Ollama réel)
+    runs-on: ubuntu-latest
+    needs: tests-donnees
+    services:
+      ollama:
+        image: ollama/ollama:latest
+        ports:
+          - 11434:11434
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dependances
+        run: pip install -r requirements.txt
+
+      - name: Attendre qu'Ollama soit pret
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:11434/ && break
+            echo "en attente d'Ollama... ($i/30)"
+            sleep 2
+          done
+
+      - name: Tirer le modele
+        run: |
+          curl -sf http://localhost:11434/api/pull -d '{"name": "llama3.2:3b"}'
+
+      - name: Évaluer le modèle et journaliser dans MLflow
+        run: python -m monitoring.evaluer_modele
+
+      - name: Valider le pipeline hybride au-dessus des seuils minimums
+        run: pytest api_ia/tests/test_modele_qualite.py::test_evaluation_hybride_seuils_minimums -v
+
+      - name: Publier le rapport et le suivi MLflow comme artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-evaluation-modele
+          path: |
+            ai-service/data/raw/monitoring/dernier_rapport_evaluation.json
+            ai-service/data/mlflow/**
+
+  # Etape 3 : packaging de l'API IA, seulement si les tests/l'evaluation ont
+  # reussi et uniquement sur main (pas sur une pull request non fusionnee).
+  packaging:
+    name: Packaging et publication de l'image Docker
+    runs-on: ubuntu-latest
+    needs: evaluation-modele
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Connexion a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build et publication de l'image api_ia
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ai-service
+          file: ./ai-service/api_ia/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/nutriscan-api-ia:latest
+            ghcr.io/${{ github.repository_owner }}/nutriscan-api-ia:${{ github.sha }}
