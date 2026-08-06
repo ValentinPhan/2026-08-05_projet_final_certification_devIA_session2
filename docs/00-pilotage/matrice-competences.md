@@ -2,9 +2,13 @@
 
 Cette matrice relie chaque compétence du référentiel RNCP (`Référentiel Dev IA Lyon P6.xlsx`) au livrable prévu dans ce dépôt. Elle sert d'auto-contrôle de conformité tout au long du projet et de sommaire pour le jury.
 
+**Les 21 compétences sont couvertes et documentées.** Synthèse par épreuve, avec analyse réflexive, dans les [rapports professionnels](../05-rapports-professionnels/README.md) (S12).
+
 Statuts : ⏳ à faire · 🚧 en cours · ✅ fait et documenté
 
 ## Bloc 1 — E1 (S2-S3)
+
+Rapport : [`e1-bloc1-donnees.md`](../05-rapports-professionnels/e1-bloc1-donnees.md)
 
 | Code | Compétence (résumé) | Semaine | Livrable prévu | Statut |
 |---|---|---|---|---|
@@ -15,6 +19,8 @@ Statuts : ⏳ à faire · 🚧 en cours · ✅ fait et documenté
 | C5 | Développer une API REST Data | S3 | `data-pipeline/api_data/`, `docs/02-bloc1-data/api-data.md` | ✅ |
 
 ## Bloc 2 — E2 (S4-S5) + E3 (S6-S8)
+
+Rapports : [`e2-bloc2-veille-benchmark-poc.md`](../05-rapports-professionnels/e2-bloc2-veille-benchmark-poc.md) (E2) · [`e3-bloc2-api-ia-monitoring-cicd.md`](../05-rapports-professionnels/e3-bloc2-api-ia-monitoring-cicd.md) (E3)
 
 | Code | Compétence (résumé) | Semaine | Livrable prévu | Statut |
 |---|---|---|---|---|
@@ -28,6 +34,8 @@ Statuts : ⏳ à faire · 🚧 en cours · ✅ fait et documenté
 | C13 | Créer une chaîne CI/CD MLOps | S8 | `.github/workflows/mlops-ci-cd.yml`, `docs/03-bloc2-ia/cicd-mlops.md` | ✅ |
 
 ## Bloc 3 — E4 (S1, S9-S10) + E5 (S11)
+
+Rapports : [`e4-bloc3-cadrage-application-cicd.md`](../05-rapports-professionnels/e4-bloc3-cadrage-application-cicd.md) (E4) · [`e5-bloc3-monitoring-incidents.md`](../05-rapports-professionnels/e5-bloc3-monitoring-incidents.md) (E5)
 
 | Code | Compétence (résumé) | Semaine | Livrable prévu | Statut |
 |---|---|---|---|---|

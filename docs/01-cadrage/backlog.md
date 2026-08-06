@@ -109,7 +109,14 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] `docs/04-bloc3-app/monitoring-app.md` et `incident-resolution.md`
 - [x] **C20 et C21 valides — Bloc 3 (C14 à C21) complet**
 
-*(Sprints S12-S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
+### Sprint S12 — Finalisation + rapports (02→06/06) — ✅ Fait
+- [x] 5 rapports professionnels (`docs/05-rapports-professionnels/`) : synthèse + analyse réflexive par épreuve (E1 : 2-5 p., E2/E3/E4 : 15-20 p., E5 : 2-5 p.)
+- [x] Matrice de compétences relue et reliée aux rapports par épreuve
+- [x] Nettoyage du dépôt vérifié (aucun fichier de cache versionné, aucun `TODO`/`FIXME` orphelin, `.gitignore` à jour)
+- [x] README racine complété avec une procédure d'installation réelle (jusque-là marquée « à compléter »)
+- [x] **Les 21 compétences sont couvertes, documentées et synthétisées par épreuve**
+
+*(Sprint S13 (préparation orale) : voir [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; carte ajoutée le moment venu, pas d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
 
 ## Rituels agiles (C16)
 

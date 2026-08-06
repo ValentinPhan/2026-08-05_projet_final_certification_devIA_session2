@@ -22,13 +22,34 @@ Le projet est structuré pour couvrir, de façon traçable, les **21 compétence
 
 - 📋 [Cahier des charges](docs/01-cadrage/cahier-des-charges.md), [user stories](docs/01-cadrage/user-stories.md), [modèle de données Merise](docs/01-cadrage/merise.md), [architecture technique](docs/01-cadrage/architecture.md)
 - 🗓️ [Planning détaillé sur 13 semaines](docs/00-pilotage/planning.md)
-- ✅ [Matrice de traçabilité des 21 compétences](docs/00-pilotage/matrice-competences.md) — vue d'ensemble de la conformité au référentiel
+- ✅ [Matrice de traçabilité des 21 compétences](docs/00-pilotage/matrice-competences.md) — vue d'ensemble de la conformité au référentiel, **complète**
 - 📌 [Backlog agile](docs/01-cadrage/backlog.md)
 - 🔒 [Registre RGPD](docs/rgpd) (dès S3) — attention particulière portée aux allergies, donnée de santé au sens de l'article 9 du RGPD
+- 📝 [Rapports professionnels par épreuve (E1-E5)](docs/05-rapports-professionnels/README.md)
 
 ## Installation et lancement
 
-À compléter au fur et à mesure du développement de chaque composant (S2 pour `data-pipeline`, S6 pour `ai-service`, S9 pour `app`). Chaque composant documentera sa propre procédure d'installation dans son README.
+```bash
+git clone <url-du-depot> && cd 2026-08-05_projet_final_certification_devIA_session2
+cp .env.example .env   # adapter les secrets si besoin (valeurs par defaut utilisables en local)
+
+# Base de donnees + les trois API (Data, IA, backend applicatif)
+docker compose up -d postgres api_data api_ia app_backend
+
+# Modele IA local (hors conteneur, voir docs/03-bloc2-ia/poc.md)
+ollama serve
+ollama pull llama3.2:3b
+
+# Import des donnees collectees (une fois, apres le premier demarrage de postgres)
+cd data-pipeline && py -m load.import_data && cd ..
+
+# Application (frontend Streamlit)
+cd app && py -m streamlit run frontend/main.py
+```
+
+Monitoring applicatif (optionnel) : `docker compose up -d prometheus grafana`, tableau de bord sur `http://localhost:3000` (identifiants dans `.env`).
+
+Chaque composant documente en détail sa propre procédure dans son README (`data-pipeline/`, `ai-service/`, `app/`) et sa documentation (`docs/02-bloc1-data/`, `docs/03-bloc2-ia/`, `docs/04-bloc3-app/`).
 
 ## Référentiel de certification
 
