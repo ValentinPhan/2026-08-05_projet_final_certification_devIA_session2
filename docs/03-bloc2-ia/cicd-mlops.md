@@ -54,6 +54,19 @@ Cette classe de problème (un environnement local « figé dans le temps » masq
 
 À cette occasion, deux points de robustesse supplémentaires ont aussi été corrigés dans le workflow lui-même : l'étape d'attente d'Ollama ne faisait jamais échouer explicitement le job si les 30 tentatives échouaient toutes (silencieusement ignoré plutôt que remonté en erreur), et l'étape de tirage du modèle ne vérifiait pas que le modèle était réellement disponible après coup (seul le code HTTP de la requête de streaming était implicitement supposé suffisant). Les deux vérifient désormais explicitement leur condition de succès et font échouer le job avec un message clair sinon.
 
+### Deuxième run réel : `tests-donnees` et `evaluation-modele` passent, `packaging` révèle un deuxième bug réel
+
+Après correctif MLflow, le run `#2` confirme que les deux premières étapes fonctionnent réellement de bout en bout sur un runner standard : `tests-donnees` (1m 0s) et surtout **`evaluation-modele` (5m 11s)** — le modèle a réellement tourné sur les 11 cas du golden dataset via le conteneur de service Ollama, produit son rapport JSON et son suivi MLflow (artefact `rapport-evaluation-modele`, 7,34 Ko, téléchargeable depuis le run). Sur un runner CPU sans GPU, chaque inférence est sensiblement plus lente que sur le poste de développement — cohérent avec la latence mesurée en local (voir [monitoring-modele.md](monitoring-modele.md)).
+
+Seule l'étape `packaging` a échoué :
+
+```
+ERROR: failed to build: invalid tag "ghcr.io/ValentinPhan/nutriscan-api-ia:latest":
+repository name must be lowercase
+```
+
+Cause : GitHub Container Registry exige un nom de dépôt entièrement en minuscules, mais `github.repository_owner` reflète la casse réelle du compte GitHub (`ValentinPhan`), non forcément en minuscules. Corrigé en ajoutant une étape qui calcule le nom d'image en minuscules (`tr '[:upper:]' '[:lower:]'`) avant de l'utiliser dans les tags — un détail qu'aucune vérification locale (`act`, tests unitaires) ne pouvait révéler puisqu'il dépend du nom réel du compte GitHub du dépôt distant.
+
 ## 5. Sécurité et permissions
 
 Le job `packaging` déclare explicitement des permissions minimales (`contents: read`, `packages: write`) plutôt que d'hériter des permissions par défaut du dépôt — principe de moindre privilège.

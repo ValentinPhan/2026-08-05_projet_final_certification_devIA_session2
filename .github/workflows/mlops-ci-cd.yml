@@ -129,6 +129,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # ghcr.io exige un nom de depot entierement en minuscules ; le nom du
+      # proprietaire du depot (github.repository_owner) ne l'est pas
+      # forcement (ex. "ValentinPhan") - trouve via l'echec du run reel #2
+      # ("repository name must be lowercase"), corrige ici plutot que suppose.
+      - name: Calculer le nom d'image en minuscules
+        id: image
+        run: echo "name=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/nutriscan-api-ia" >> "$GITHUB_OUTPUT"
+
       - name: Build et publication de l'image api_ia
         uses: docker/build-push-action@v6
         with:
@@ -136,5 +144,5 @@ jobs:
           file: ./ai-service/api_ia/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/nutriscan-api-ia:latest
-            ghcr.io/${{ github.repository_owner }}/nutriscan-api-ia:${{ github.sha }}
+            ${{ steps.image.outputs.name }}:latest
+            ${{ steps.image.outputs.name }}:${{ github.sha }}
