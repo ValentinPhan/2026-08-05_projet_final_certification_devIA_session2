@@ -19,14 +19,18 @@ Usage (developpement) :
 from __future__ import annotations
 
 import os
+import time
 from contextlib import contextmanager
 from typing import Iterator
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from psycopg2.extensions import connection as PgConnection
 from psycopg2.extras import RealDictCursor
 
 from .common.db import get_connection
+from .common.logging_config import evenement, get_logger
 from .schemas import (
     ConnexionIn,
     ExportRgpdOut,
@@ -57,6 +61,51 @@ app = FastAPI(
     description="Compte utilisateur, profil allergene, historique et droits RGPD (Bloc 3).",
     version="0.1.0",
 )
+
+logger = get_logger()
+
+# ---------------------------------------------------------------------------
+# Monitoring applicatif (competence C20) : metriques Prometheus exposees sur
+# /metrics (scrape par le conteneur Prometheus, voir docker-compose.yml et
+# docs/04-bloc3-app/monitoring-app.md). Nommage prefixe "nutriscan_backend_"
+# pour eviter toute collision avec d'autres exportateurs.
+# ---------------------------------------------------------------------------
+REQUETES_TOTAL = Counter(
+    "nutriscan_backend_requetes_total", "Nombre de requetes HTTP recues", ["methode", "chemin", "statut"]
+)
+DUREE_REQUETE_SECONDES = Histogram(
+    "nutriscan_backend_duree_requete_secondes", "Duree de traitement des requetes HTTP", ["methode", "chemin"]
+)
+INSCRIPTIONS_TOTAL = Counter("nutriscan_backend_inscriptions_total", "Nombre de comptes crees")
+CONNEXIONS_REUSSIES_TOTAL = Counter("nutriscan_backend_connexions_reussies_total", "Nombre de connexions reussies")
+CONNEXIONS_ECHOUEES_TOTAL = Counter(
+    "nutriscan_backend_connexions_echouees_total", "Nombre de tentatives de connexion echouees (mauvais mdp, email inconnu, ou verrouillage)"
+)
+PROFILS_MAJ_TOTAL = Counter("nutriscan_backend_profils_maj_total", "Nombre de mises a jour du profil allergene")
+HISTORIQUE_AJOUTS_TOTAL = Counter(
+    "nutriscan_backend_historique_ajouts_total", "Nombre d'analyses ajoutees a l'historique", ["statut_compatibilite"]
+)
+EXPORTS_RGPD_TOTAL = Counter("nutriscan_backend_exports_rgpd_total", "Nombre d'exports RGPD (droit a la portabilite)")
+SUPPRESSIONS_COMPTE_TOTAL = Counter("nutriscan_backend_suppressions_compte_total", "Nombre de suppressions de compte (droit a l'effacement)")
+
+
+@app.middleware("http")
+async def mesurer_requetes(request: Request, call_next):
+    debut = time.monotonic()
+    reponse = await call_next(request)
+    duree = time.monotonic() - debut
+    # Les chemins de ce backend n'ont aucun parametre dans l'URL (pas de
+    # /profil/{id}) : pas de risque de cardinalite explosive a utiliser
+    # request.url.path tel quel comme etiquette.
+    chemin = request.url.path
+    REQUETES_TOTAL.labels(methode=request.method, chemin=chemin, statut=reponse.status_code).inc()
+    DUREE_REQUETE_SECONDES.labels(methode=request.method, chemin=chemin).observe(duree)
+    return reponse
+
+
+@app.get("/metrics", include_in_schema=False)
+def metriques() -> Response:
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 def _cle_chiffrement() -> str:
@@ -136,6 +185,8 @@ def inscription(payload: InscriptionIn, cur: RealDictCursor = Depends(get_cursor
     )
     id_utilisateur = cur.fetchone()["id_utilisateur"]
     _tracer_traitement(cur, id_utilisateur, "creation_compte", "Authentifier l'utilisateur")
+    INSCRIPTIONS_TOTAL.inc()
+    evenement(logger, "inscription", id_utilisateur=id_utilisateur)
     return InscriptionOut(id_utilisateur=id_utilisateur, email=payload.email)
 
 
@@ -162,10 +213,17 @@ def connexion(payload: ConnexionIn, cur: RealDictCursor = Depends(get_cursor)) -
     # pas non plus reveler l'existence du compte par le temps de reponse.
     if ligne is None or not verifier_mot_de_passe(payload.mot_de_passe, hash_stocke):
         enregistrer_echec_connexion(payload.email)
+        CONNEXIONS_ECHOUEES_TOTAL.inc()
+        # Pas d'email ni d'id_utilisateur journalise ici (US1 : email inconnu
+        # possible) - seul le comptage importe pour detecter un pic de
+        # bruteforce, voir docs/04-bloc3-app/monitoring-app.md.
+        evenement(logger, "connexion_echouee")
         raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
 
     reinitialiser_echecs_connexion(payload.email)
     token = creer_jeton_session(ligne["id_utilisateur"])
+    CONNEXIONS_REUSSIES_TOTAL.inc()
+    evenement(logger, "connexion_reussie", id_utilisateur=ligne["id_utilisateur"])
     return SessionOut(access_token=token, expires_in_minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
 
@@ -220,6 +278,10 @@ def remplacer_profil(
         "Detecter les incompatibilites entre le profil et un produit/une recette",
         donnee_sante=True,
     )
+    PROFILS_MAJ_TOTAL.inc()
+    # Nombre d'allergenes uniquement (jamais lesquels : donnee de sante, voir
+    # common/logging_config.py pour la regle de confidentialite des logs).
+    evenement(logger, "profil_mis_a_jour", id_utilisateur=id_utilisateur, nb_allergenes=len(profil))
     cur.execute(
         "SELECT a.libelle, pgp_sym_decrypt(ua.niveau_chiffre, %s) AS niveau, ua.date_maj "
         "FROM utilisateur_allergene ua JOIN allergene a ON a.id_allergene = ua.id_allergene "
@@ -288,6 +350,8 @@ def ajouter_historique(
         ),
     )
     row = cur.fetchone()
+    HISTORIQUE_AJOUTS_TOTAL.labels(statut_compatibilite=payload.statut_compatibilite).inc()
+    evenement(logger, "historique_ajoute", id_utilisateur=id_utilisateur, statut_compatibilite=payload.statut_compatibilite)
     return HistoriqueOut(
         **{**row, "allergenes_detectes": row["allergenes_detectes"].split(",") if row["allergenes_detectes"] else []}
     )
@@ -319,6 +383,8 @@ def exporter_donnees(
     profil = lire_profil(id_utilisateur=id_utilisateur, cur=cur)
     historique = lire_historique(id_utilisateur=id_utilisateur, cur=cur)
     _tracer_traitement(cur, id_utilisateur, "export_donnees", "Exercice du droit a la portabilite (art. 20 RGPD)")
+    EXPORTS_RGPD_TOTAL.inc()
+    evenement(logger, "export_rgpd", id_utilisateur=id_utilisateur)
     return ExportRgpdOut(utilisateur=UtilisateurOut(**utilisateur), profil_allergene=profil, historique=historique)
 
 
@@ -345,5 +411,10 @@ def supprimer_compte(
     # suppression du compte. Limitation connue vis-a-vis de l'accountability
     # (art. 5.2 RGPD) permanente, documentee dans docs/04-bloc3-app/dev-application.md -
     # une preuve durable des traitements passes necessiterait un journal
-    # d'audit hors cascade, hors perimetre de cette version.
+    # d'audit hors cascade, hors perimetre de cette version. Le log applicatif
+    # (ci-dessous), lui, n'est pas stocke dans cette base et survit donc a la
+    # suppression - c'est aujourd'hui la seule trace durable de la
+    # suppression elle-meme, attenuant partiellement cette limitation.
+    SUPPRESSIONS_COMPTE_TOTAL.inc()
+    evenement(logger, "suppression_compte", id_utilisateur=id_utilisateur)
     cur.execute("DELETE FROM utilisateur WHERE id_utilisateur = %s", (id_utilisateur,))

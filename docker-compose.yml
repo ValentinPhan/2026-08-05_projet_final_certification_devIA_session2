@@ -70,5 +70,38 @@ services:
       postgres:
         condition: service_healthy
 
+  # Monitoring applicatif (competence C20). Autoheberge via docker-compose,
+  # comme le reste de la stack de developpement - zero compte/service cloud
+  # tiers (Grafana Cloud, Datadog...), coherent avec le principe pose des le
+  # cadrage (docs/01-cadrage/architecture.md).
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nutriscan-prometheus
+    volumes:
+      - ./app/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - app_backend
+
+  grafana:
+    # Version epinglee plutot que ":latest" - "latest" a resolu vers une
+    # version dont le rendu de tableau de bord etait casse dans cet
+    # environnement (aucun panneau ne s'affichait, meme un panneau texte
+    # sans requete), trouve en testant reellement (voir
+    # docs/04-bloc3-app/monitoring-app.md). Une image versionnee et figee est
+    # de toute façon la pratique recommandee pour la reproductibilite.
+    image: grafana/grafana:11.1.0
+    container_name: nutriscan-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-nutriscan_dev}
+    volumes:
+      - ./app/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./app/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
 volumes:
   nutriscan_pgdata:

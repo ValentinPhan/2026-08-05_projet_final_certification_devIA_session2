@@ -10,6 +10,10 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+import httpx
+import pytest
+from openai import APIConnectionError
+
 from api_ia.extraction import analyser_texte, detecter_par_ia, detecter_par_mots_cles
 
 
@@ -72,6 +76,34 @@ def test_statut_compatible_si_aucun_allergene_declare_detecte():
         )
     assert resultat["statut_compatibilite"] == "compatible"
     assert resultat["allergenes_problematiques"] == []
+
+
+def test_analyser_texte_degrade_sur_mots_cles_si_ia_indisponible():
+    """Incident reel simule (S11, panne d'Ollama) : l'ancienne version faisait
+    echouer toute l'analyse (500) des que l'appel au modele levait une
+    exception, y compris pour la recherche par mots-cles qui ne necessite
+    pourtant aucun reseau. Voir docs/04-bloc3-app/incident-resolution.md."""
+    client = MagicMock()
+    erreur = APIConnectionError(request=httpx.Request("POST", "http://ollama-indisponible/v1/chat/completions"))
+    with patch("api_ia.extraction.detecter_par_ia", side_effect=erreur):
+        resultat = analyser_texte(
+            client, "modele-factice",
+            "Tahini (sesame), eau, sel.",
+            allergies_utilisateur=[{"libelle": "Graines de sesame", "niveau": "allergie"}],
+        )
+    assert resultat["ia_disponible"] is False
+    assert resultat["detection_ia"] == []
+    assert resultat["detection_mots_cles"] == ["Graines de sesame"]
+    assert resultat["allergenes_detectes"] == ["Graines de sesame"]
+    assert resultat["statut_compatibilite"] == "incompatible"
+    assert "indisponible" in resultat["justification_ia"].lower()
+
+
+def test_analyser_texte_ia_disponible_a_true_en_fonctionnement_normal():
+    client = MagicMock()
+    with patch("api_ia.extraction.detecter_par_ia", return_value=(["Lait"], "detecte")):
+        resultat = analyser_texte(client, "modele-factice", "lait", allergies_utilisateur=[])
+    assert resultat["ia_disponible"] is True
 
 
 def test_detecter_par_ia_filtre_les_allergenes_hors_referentiel():

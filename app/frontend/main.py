@@ -142,6 +142,13 @@ def _appel_backend(methode: str, chemin: str, timeout: int = 15, **kwargs: Any) 
         st.error("Votre session a expiré. Merci de vous reconnecter.")
         st.rerun()
     if response.status_code >= 400:
+        # US9 : ce cas (erreur HTTP renvoyee par le backend, ex. 500) ne
+        # levait auparavant aucune alerte - un appelant recevant (None, reponse)
+        # pouvait alors afficher a tort un message de type "aucune donnee"
+        # plutot que de signaler une panne reelle (trouve en simulant une
+        # panne, voir docs/04-bloc3-app/incident-resolution.md).
+        detail = response.json().get("detail", response.text) if response.content else response.reason
+        st.error(f"Le service applicatif a renvoyé une erreur : {detail}")
         return None, response
     corps = response.json() if response.content else None
     return corps, response
@@ -227,7 +234,17 @@ def page_profil() -> None:
     referentiel = charger_allergenes_referentiel()
     if "profil_charge" not in st.session_state:
         profil_actuel, _ = _appel_backend("GET", "/profil")
-        st.session_state["profil_charge"] = {ligne["libelle"]: ligne["niveau"] for ligne in (profil_actuel or [])}
+        if profil_actuel is None:
+            # Protection contre la perte de donnees (US9) : si le chargement
+            # echoue, ne jamais mettre en cache un profil vide - un simple
+            # clic sur "Enregistrer" ecraserait alors silencieusement le
+            # vrai profil sauvegarde par une liste vide. Bug reel trouve en
+            # simulant une panne du backend (voir incident-resolution.md) :
+            # mieux vaut bloquer la page que risquer d'effacer une donnee de
+            # sante par accident.
+            st.error("Impossible de charger votre profil actuel. Réessayez dans quelques instants.")
+            return
+        st.session_state["profil_charge"] = {ligne["libelle"]: ligne["niveau"] for ligne in profil_actuel}
     niveau_actuel = st.session_state["profil_charge"]
 
     # Pas de st.form ici volontairement : le radio "niveau" n'est affiche que
@@ -264,6 +281,13 @@ def _profil_pour_analyse() -> list[dict[str, str]]:
 
 
 def afficher_resultat(resultat: dict[str, Any]) -> None:
+    if not resultat.get("ia_disponible", True):
+        # US9 : ne jamais laisser croire a une analyse complete quand le
+        # modele IA est indisponible - le resultat repose alors uniquement
+        # sur le filet de securite par mots-cles (voir extraction.py,
+        # incident simule en S11 : docs/04-bloc3-app/incident-resolution.md).
+        st.warning("⚠️ Service IA temporairement indisponible : analyse basée uniquement sur la recherche de mots-clés, moins fiable.")
+
     icone, libelle, niveau = STATUT_AFFICHAGE[resultat["statut_compatibilite"]]
     getattr(st, niveau)(f"{icone} **{libelle}**")
 
@@ -332,7 +356,13 @@ def _enregistrer_historique(**kwargs: Any) -> None:
 def page_recherche_produit() -> None:
     st.subheader("Rechercher un produit")
     recherche = st.text_input("Filtrer par catégorie (ex. « biscuit »)", key="recherche_produit")
-    produits = _appel_service(DATA_API_URL, "GET", "/produits", params={"categorie": recherche, "limit": 20}) or []
+    produits = _appel_service(DATA_API_URL, "GET", "/produits", params={"categorie": recherche, "limit": 20})
+    # US9 : ne jamais confondre "service indisponible" (erreur deja affichee par
+    # _appel_service, produits vaut None) et "recherche sans resultat" (liste
+    # vide valide) - bug reel trouve lors de la simulation d'incident (panne de
+    # l'API Data), voir docs/04-bloc3-app/incident-resolution.md.
+    if produits is None:
+        return
     if not produits:
         st.info("Aucun produit trouvé pour ce filtre.")
         return
@@ -356,7 +386,10 @@ def page_recherche_produit() -> None:
 
 def page_recherche_recette() -> None:
     st.subheader("Rechercher une recette")
-    recettes = _appel_service(DATA_API_URL, "GET", "/recettes", params={"limit": 20}) or []
+    recettes = _appel_service(DATA_API_URL, "GET", "/recettes", params={"limit": 20})
+    # US9 : voir le commentaire equivalent de page_recherche_produit.
+    if recettes is None:
+        return
     if not recettes:
         st.info("Aucune recette disponible.")
         return
@@ -391,6 +424,11 @@ def page_texte_libre() -> None:
 def page_historique() -> None:
     st.subheader("Mon historique d'analyses")
     historique, _ = _appel_backend("GET", "/historique")
+    # US9 : voir le commentaire equivalent de page_recherche_produit - un
+    # service indisponible (erreur deja affichee par _appel_backend) ne doit
+    # jamais etre confondu avec un historique reellement vide.
+    if historique is None:
+        return
     if not historique:
         st.info("Aucune analyse enregistrée pour l'instant.")
         return

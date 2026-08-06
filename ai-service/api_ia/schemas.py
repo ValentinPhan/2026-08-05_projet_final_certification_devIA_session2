@@ -44,6 +44,10 @@ class AnalyseOut(BaseModel):
     detection_ia: list[str]
     detection_mots_cles: list[str]
     justification_ia: str
+    # False si le modele local (Ollama) etait indisponible au moment de
+    # l'analyse : le resultat ne repose alors que sur le filet de securite
+    # par mots-cles (voir extraction.py::analyser_texte, incident S11).
+    ia_disponible: bool = True
 
 
 class AnalyseProduitOut(AnalyseOut):

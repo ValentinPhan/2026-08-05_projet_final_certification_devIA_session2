@@ -1,0 +1,10 @@
+# Configuration Prometheus (competence C20). Autohebergee via docker-compose
+# (zero compte/service cloud tiers), coherent avec l'architecture "zero cle
+# externe" du projet (voir docs/01-cadrage/architecture.md).
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "nutriscan-app-backend"
+    static_configs:
+      - targets: ["app_backend:8000"]

@@ -14,7 +14,7 @@ Kanban tenu en markdown dans ce dépôt (accessible à toute partie prenante san
 | [US6](user-stories.md#us6--score-nutritionnel-détaillé) | Score nutritionnel détaillé | B1/B3 | ✅ Fait |
 | [US7](user-stories.md#us7--historique-de-mes-recherches-et-analyses) | Historique de mes recherches et analyses | B3 | ✅ Fait |
 | [US8](user-stories.md#us8--maîtrise-de-mes-données-personnelles-rgpd) | Maîtrise de mes données personnelles (RGPD) | B1/B3 | ✅ Fait |
-| [US9](user-stories.md#us9--transparence-en-cas-dindisponibilité) | Transparence en cas d'indisponibilité | B2/B3 | 📋 Backlog |
+| [US9](user-stories.md#us9--transparence-en-cas-dindisponibilité) | Transparence en cas d'indisponibilité | B2/B3 | ✅ Fait |
 
 Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En cours · ✅ Fait
 
@@ -98,7 +98,18 @@ Statuts possibles : 📋 Backlog · 🔜 À faire (sprint courant) · 🚧 En co
 - [x] `docs/04-bloc3-app/ci.md` et `cd.md`
 - [x] **C18 et C19 valides**
 
-*(Sprints S11 à S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
+### Sprint S11 — Monitoring app + incident (26→30/05) — ✅ Fait
+- [x] Deux incidents réellement simulés (arrêt effectif des conteneurs/processus) : panne de l'API Data, panne d'Ollama
+- [x] 4 bugs réels trouvés et corrigés côté frontend (confusion panne/résultat vide sur 3 pages, risque de perte du profil allergène en cas de panne)
+- [x] Bug critique corrigé côté service IA (`ai-service/api_ia/extraction.py`) : une panne d'Ollama faisait échouer toute l'analyse au lieu de degrader sur le filet de sécurité par mots-clés — touche le Bloc 2, assumé car découvert en exploitant réellement l'application (Bloc 3)
+- [x] US9 (transparence en cas d'indisponibilité) close par ces deux incidents
+- [x] Journalisation structurée JSON (`app/backend/common/logging_config.py`), sans aucune donnée de santé ni secret en clair
+- [x] Métriques Prometheus (`GET /metrics`) + tableau de bord Grafana provisionné automatiquement (`app/monitoring/`)
+- [x] Bug réel corrigé : `grafana/grafana:latest` resolu vers une version au rendu casse - epingle a `11.1.0`
+- [x] `docs/04-bloc3-app/monitoring-app.md` et `incident-resolution.md`
+- [x] **C20 et C21 valides — Bloc 3 (C14 à C21) complet**
+
+*(Sprints S12-S13 : voir le détail semaine par semaine dans [`docs/00-pilotage/planning.md`](../00-pilotage/planning.md) ; les cartes correspondantes seront ajoutées ici au fur et à mesure, pas toutes d'avance, pour que le board reste le reflet honnête de l'avancement réel.)*
 
 ## Rituels agiles (C16)
 

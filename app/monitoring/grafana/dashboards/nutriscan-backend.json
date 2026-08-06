@@ -1,0 +1,130 @@
+{
+  "title": "NutriScan IA — Backend applicatif",
+  "uid": "nutriscan-backend",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Requêtes HTTP par statut (taux / s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (statut) (rate(nutriscan_backend_requetes_total[5m]))",
+          "legendFormat": "{{statut}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Latence des requêtes — p95 (secondes)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, chemin) (rate(nutriscan_backend_duree_requete_secondes_bucket[5m])))",
+          "legendFormat": "{{chemin}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 3 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Taux d'erreur serveur (5xx / total, %)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "100 * sum(rate(nutriscan_backend_requetes_total{statut=~\"5..\"}[5m])) / sum(rate(nutriscan_backend_requetes_total[5m]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Connexions échouées (taux / 5 min)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 8 },
+      "description": "Un pic soutenu peut indiquer une tentative de bruteforce (voir security.py, verrouille_pour_bruteforce).",
+      "targets": [
+        { "expr": "increase(nutriscan_backend_connexions_echouees_total[5m])" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 10 },
+              { "color": "red", "value": 30 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "Comptes créés (cumulé)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 4, "x": 12, "y": 8 },
+      "targets": [{ "expr": "nutriscan_backend_inscriptions_total" }]
+    },
+    {
+      "id": 6,
+      "title": "Exports RGPD (cumulé)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 4, "x": 16, "y": 8 },
+      "targets": [{ "expr": "nutriscan_backend_exports_rgpd_total" }]
+    },
+    {
+      "id": 7,
+      "title": "Suppressions de compte (cumulé)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 4, "x": 20, "y": 8 },
+      "targets": [{ "expr": "nutriscan_backend_suppressions_compte_total" }]
+    },
+    {
+      "id": 8,
+      "title": "Analyses historisées par statut de compatibilité (taux / 5 min)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
+      "description": "Reflete indirectement l'usage du service IA (Bloc 2) : chaque analyse produit/recette validee par l'utilisateur est historisee ici.",
+      "targets": [
+        {
+          "expr": "sum by (statut_compatibilite) (rate(nutriscan_backend_historique_ajouts_total[5m]))",
+          "legendFormat": "{{statut_compatibilite}}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+# Provisionnement automatique du tableau de bord (charge le JSON du dossier
+# monte ci-dessous) - meme logique que la source de donnees : reproductible
+# sans etape manuelle dans l'interface Grafana.
+apiVersion: 1
+
+providers:
+  - name: NutriScan IA
+    folder: ""
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

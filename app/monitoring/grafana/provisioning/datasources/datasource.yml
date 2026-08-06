@@ -1,0 +1,12 @@
+# Provisionnement automatique de la source de donnees Grafana -> Prometheus,
+# pour que le tableau de bord soit disponible des le premier demarrage sans
+# configuration manuelle dans l'interface (reproductible via `docker compose up`).
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false

@@ -17,7 +17,7 @@ import re
 import unicodedata
 from typing import Any
 
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 
 from common.allergenes import ALLERGENES_REFERENTIEL, SYNONYMES_ALLERGENES
 
@@ -98,9 +98,28 @@ def analyser_texte(client: OpenAI, model: str, texte: str, allergies_utilisateur
     `allergies_utilisateur` : liste de {"libelle": <allergene du referentiel>, "niveau": "allergie"|"intolerance"|"preference"}.
     Ce niveau (au sens Merise, voir docs/01-cadrage/merise.md) permet de distinguer une
     incompatibilite stricte (allergie) d'un simple risque (intolerance/preference).
+
+    Le filet de securite par mots-cles est calcule en premier, independamment
+    du modele : si l'appel au modele local echoue (Ollama indisponible), on
+    degrade sur ce seul filet plutot que de faire echouer l'analyse entiere -
+    bug reel trouve en simulant une panne d'Ollama (voir
+    docs/04-bloc3-app/incident-resolution.md) : l'ancien code appelait le
+    modele en premier et une erreur de connexion faisait echouer toute la
+    fonction avant meme d'executer la recherche par mots-cles, qui ne
+    necessite pourtant aucun reseau. Le champ `ia_disponible` du resultat
+    signale explicitement ce mode degrade (jamais silencieux, voir US9).
     """
-    detection_ia, justification = detecter_par_ia(client, model, texte)
     detection_mots_cles = detecter_par_mots_cles(texte)
+    try:
+        detection_ia, justification = detecter_par_ia(client, model, texte)
+        ia_disponible = True
+    except OpenAIError:
+        detection_ia, justification = [], (
+            "Service IA temporairement indisponible : analyse basee uniquement sur la "
+            "recherche de mots-cles, moins fiable (des allergenes formules de maniere "
+            "inhabituelle peuvent ne pas etre detectes)."
+        )
+        ia_disponible = False
     allergenes_detectes = sorted(set(detection_ia) | set(detection_mots_cles))
 
     libelles_utilisateur = {a["libelle"]: a["niveau"] for a in allergies_utilisateur}
@@ -120,4 +139,5 @@ def analyser_texte(client: OpenAI, model: str, texte: str, allergies_utilisateur
         "detection_ia": sorted(detection_ia),
         "detection_mots_cles": sorted(detection_mots_cles),
         "justification_ia": justification,
+        "ia_disponible": ia_disponible,
     }
